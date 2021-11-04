@@ -2,8 +2,11 @@ import { render } from "react-dom";
 import { Component, createRef } from "react";
 import { Container, Form, Button, ListGroup } from "react-bootstrap";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-import { Pose, POSE_CONNECTIONS, Results as PoseResults } from "@mediapipe/pose"
+// import { Pose, POSE_CONNECTIONS, Results as PoseResults } from "@mediapipe/pose"
+import type { Results as PoseResults, Pose } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
+
+let mpPose: typeof import("@mediapipe/pose") = window as any;
 
 class PoseInfo {
   ctx: CanvasRenderingContext2D;
@@ -36,7 +39,7 @@ class PoseInfo {
       results.image, 0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.globalCompositeOperation = 'source-over';
-    drawConnectors(this.ctx, results.poseLandmarks, POSE_CONNECTIONS,
+    drawConnectors(this.ctx, results.poseLandmarks, mpPose.POSE_CONNECTIONS,
       { color: '#00FF00', lineWidth: 4 });
     drawLandmarks(this.ctx, results.poseLandmarks,
       { color: '#FF0000', lineWidth: 2 });
@@ -82,8 +85,9 @@ class PoseApp extends Component<{}, PoseAppState> {
 
   componentDidMount() {
     this.info = new PoseInfo(this.canvas.current, this.grid.current);
-    this.pose = new Pose({
-      locateFile: path => POSE_FILES[path],
+    this.pose = new mpPose.Pose({
+      // locateFile: path => POSE_FILES[path],
+      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`,
     });
     this.pose.setOptions({
       modelComplexity: 1,
@@ -94,20 +98,22 @@ class PoseApp extends Component<{}, PoseAppState> {
       minTrackingConfidence: 0.5
     });
     this.pose.onResults(r => this.info.update(r));
-    this.pose.initialize()
-      .then(() => this.setState({ poseStatus: 'Loaded.' }))
-      .catch(e => {
-        console.error(e);
-        this.setState({ poseStatus: `Error ${e}` })
+    setTimeout(() => {
+      this.pose.initialize()
+        .then(() => this.setState({ poseStatus: 'Loaded.' }))
+        .catch(e => {
+          console.error(e);
+          this.setState({ poseStatus: `Error ${e} ` })
+        });
+      const camera = new Camera(this.video.current, {
+        onFrame: async () => {
+          await this.pose.send({ image: this.video.current });
+        },
+        width: 1280,
+        height: 720
       });
-    const camera = new Camera(this.video.current, {
-      onFrame: async () => {
-        await this.pose.send({ image: this.video.current });
-      },
-      width: 1280,
-      height: 720
-    });
-    camera.start();
+      camera.start();
+    }, 5000);
   }
 
   render() {
