@@ -2,11 +2,8 @@ import { render } from "react-dom";
 import { Component, createRef } from "react";
 import { Container, Form, Button, ListGroup } from "react-bootstrap";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
-// import { Pose, POSE_CONNECTIONS, Results as PoseResults } from "@mediapipe/pose"
-import type { Results as PoseResults, Pose } from "@mediapipe/pose"
+import { Pose, POSE_CONNECTIONS, Results as PoseResults, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
-
-let mpPose: typeof import("@mediapipe/pose") = window as any;
 
 class PoseInfo {
   ctx: CanvasRenderingContext2D;
@@ -25,8 +22,8 @@ class PoseInfo {
 
     this.ctx.save();
     this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-    this.ctx.drawImage(results.segmentationMask, 0, 0,
-      this.canvas.width, this.canvas.height);
+    //this.ctx.drawImage(results.segmentationMask, 0, 0,
+    //  this.canvas.width, this.canvas.height);
 
     // Only overwrite existing pixels.
     this.ctx.globalCompositeOperation = 'source-in';
@@ -39,7 +36,7 @@ class PoseInfo {
       results.image, 0, 0, this.canvas.width, this.canvas.height);
 
     this.ctx.globalCompositeOperation = 'source-over';
-    drawConnectors(this.ctx, results.poseLandmarks, mpPose.POSE_CONNECTIONS,
+    drawConnectors(this.ctx, results.poseLandmarks, POSE_CONNECTIONS,
       { color: '#00FF00', lineWidth: 4 });
     drawLandmarks(this.ctx, results.poseLandmarks,
       { color: '#FF0000', lineWidth: 2 });
@@ -85,42 +82,40 @@ class PoseApp extends Component<{}, PoseAppState> {
 
   componentDidMount() {
     this.info = new PoseInfo(this.canvas.current, this.grid.current);
-    this.pose = new mpPose.Pose({
+    this.pose = new Pose({
       // locateFile: path => POSE_FILES[path],
-      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${mpPose.VERSION}/${file}`,
+      locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
     });
     this.pose.setOptions({
-      modelComplexity: 1,
+      modelComplexity: 2,
       smoothLandmarks: true,
-      enableSegmentation: true,
-      smoothSegmentation: true,
+      enableSegmentation: false,
+      smoothSegmentation: false,
       minDetectionConfidence: 0.5,
       minTrackingConfidence: 0.5
     });
     this.pose.onResults(r => this.info.update(r));
-    setTimeout(() => {
-      this.pose.initialize()
-        .then(() => this.setState({ poseStatus: 'Loaded.' }))
-        .catch(e => {
-          console.error(e);
-          this.setState({ poseStatus: `Error ${e} ` })
-        });
-      const camera = new Camera(this.video.current, {
-        onFrame: async () => {
-          await this.pose.send({ image: this.video.current });
-        },
-        width: 1280,
-        height: 720
+    this.pose.initialize()
+      .then(() => this.setState({ poseStatus: 'Loaded.' }))
+      .catch(e => {
+        console.error(e);
+        this.setState({ poseStatus: `Error ${e} ` })
       });
-      camera.start();
-    }, 5000);
+    const camera = new Camera(this.video.current, {
+      onFrame: async () => {
+        await this.pose.send({ image: this.video.current });
+      },
+      width: 1280,
+      height: 720
+    });
+    camera.start();
   }
 
   render() {
     return <Container>
       <h2>Pose Review</h2>
       <p>{this.state.poseStatus}</p>
-      <video ref={this.video}></video>
+      <video style={{ display: "none" }} ref={this.video}></video>
       <canvas width="1280px" height="720px" ref={this.canvas}></canvas>
       <div ref={this.grid}></div>
     </Container>;
