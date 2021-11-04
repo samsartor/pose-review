@@ -233,6 +233,31 @@
   resolved "https://registry.yarnpkg.com/@iarna/toml/-/toml-2.2.5.tgz#b32366c89b43c6f8cefbdefac778b9c828e3ba8c"
   integrity sha512-trnsAYxU3xnS1gPHPyU961coFyLkh4gAD/0zQ5mymY4yOZ+CYvsPqUbOFSw0aDM4y0tV7tiFxL/1XfXPNC6IPg==
 
+"@mediapipe/camera_utils@^0.3.1632432234":
+  version "0.3.1632432234"
+  resolved "https://registry.yarnpkg.com/@mediapipe/camera_utils/-/camera_utils-0.3.1632432234.tgz#60d859ac347506e2729f431afb8995b0a8ca8589"
+  integrity sha512-uGWOSd/1dNUka5/KkDs37pjYoHhFwUtQwQL/zhkQxZHAgYS8oCcz9vupa3pHthUzHDqzTw4XqB7teuoVRO+8/A==
+
+"@mediapipe/control_utils@^0.6.1629159505":
+  version "0.6.1629159505"
+  resolved "https://registry.yarnpkg.com/@mediapipe/control_utils/-/control_utils-0.6.1629159505.tgz#5aec51a5819cf604184a6b6a3c0afc6643dc772f"
+  integrity sha512-n8ZfgwZlv3EDiF2bsz81+74qWqbu5JSukxRRVuJqkqxO1CsfQGFj8XI2Cxj0UlsnO1vzNelZiWV1tP3of47z7g==
+
+"@mediapipe/control_utils_3d@^0.3.1635987963":
+  version "0.3.1635987963"
+  resolved "https://registry.yarnpkg.com/@mediapipe/control_utils_3d/-/control_utils_3d-0.3.1635987963.tgz#14a7903b5b8dff6d231ce41b3d8ed79b1523f39e"
+  integrity sha512-/eE5yl79CF5WKOzyEbwC64bLaTITByxdpiFPECQxjLTgNF0/HhwvM5EtA8tVt93FEj4nzkZlOU9LJzAKokesxQ==
+
+"@mediapipe/drawing_utils@^0.3.1620248257":
+  version "0.3.1620248257"
+  resolved "https://registry.yarnpkg.com/@mediapipe/drawing_utils/-/drawing_utils-0.3.1620248257.tgz#b39dfd235e7cf520e3e39d8b2bac2c5d717a7158"
+  integrity sha512-s598oo1K6C62mX3rWXJ7n1RJFdXjyQn3f6CeI+lU6kD69MVyBcV3hdmO5LnEZlCw5NRDANtaM8WAOuqZHaldLg==
+
+"@mediapipe/pose@^0.5.1635988162":
+  version "0.5.1635988162"
+  resolved "https://registry.yarnpkg.com/@mediapipe/pose/-/pose-0.5.1635988162.tgz#905e626cb07bce86c692d8ec057f04558ddd26fe"
+  integrity sha512-t0dpl+iG/MTPtPPxEYHyVWo+X7G+qgYUYaB4y9pxavQRNzuQQeHeSmUnT+A8qOKnuB0ccxgyrrFmGUaaL0F3wQ==
+
 "@nodelib/fs.scandir@2.1.5":
   version "2.1.5"
   resolved "https://registry.yarnpkg.com/@nodelib/fs.scandir/-/fs.scandir-2.1.5.tgz#7619c2eb21b25483f6d167548b4cfd5a7488c3d5"
@@ -4489,6 +4514,11 @@ terser@^5.2.0, terser@^5.8.0:
     commander "^2.20.0"
     source-map "~0.7.2"
     source-map-support "~0.5.20"
+
+three@^0.134.0:
+  version "0.134.0"
+  resolved "https://registry.yarnpkg.com/three/-/three-0.134.0.tgz#d7ad4d85d050da0861bf39749b06ddfb5f17157f"
+  integrity sha512-LbBerg7GaSPjYtTOnu41AMp7tV6efUNR3p4Wk5NzkSsNTBuA5mDGOfwwZL1jhhVMLx9V20HolIUo0+U3AXehbg==
 
 timers-browserify@^2.0.11:
   version "2.0.12"
