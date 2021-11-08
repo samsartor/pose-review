@@ -8,7 +8,7 @@
   "source": "src/index.html",
   "scripts": {
     "start": "parcel",
-    "build": "parcel build"
+    "build": "parcel build --public-url https://gh.samsartor.com/pose-review"
   },
   "devDependencies": {
     "@parcel/transformer-sass": "^2.0.1",
