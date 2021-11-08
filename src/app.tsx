@@ -1,9 +1,11 @@
 import { render } from "react-dom";
 import { Component, createRef } from "react";
-import { Container, Form, Button, ListGroup } from "react-bootstrap";
+import { Container, Form, Button, ListGroup, Nav } from "react-bootstrap";
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { Pose, POSE_CONNECTIONS, Results as PoseResults, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
+import { BrowserRouter, NavLink } from "react-router-dom";
+import { Routes, Route } from "react-router";
 
 class PoseInfo {
   ctx: CanvasRenderingContext2D;
@@ -187,11 +189,19 @@ class TodoList extends Component<{ items: Item[] }> {
 }
 
 render(
-  <PoseApp />,
+  <BrowserRouter>
+    <Nav as="ul">
+      <Nav.Item as="li">
+        <Nav.Link as={NavLink} to="/">Pose</Nav.Link>
+      </Nav.Item>
+      <Nav.Item as="li">
+        <Nav.Link as={NavLink} to="/todos">TODO</Nav.Link>
+      </Nav.Item>
+    </Nav>
+    <Routes>
+      <Route path="/" element={<PoseApp />} />
+      <Route path="/todos" element={<TodoApp />} />
+    </Routes>
+  </BrowserRouter>,
   document.getElementById('pose')
-);
-
-render(
-  <TodoApp />,
-  document.getElementById('todos')
 );
