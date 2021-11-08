@@ -8,10 +8,10 @@
    - `node -v`
    - `npm -v`
 
-4. Install the [`yarn` package manager](https://yarnpkg.com/)
+4. Install the [`yarn` package manager](https://yarnpkg.com/):
    - `npm install -g yarn`
 
-5. Clone the git repository
+5. Clone the git repository to the desired location:
    - `git clone https://github.com/samsartor/pose-review.git`
 
 6. Enter cloned repository
@@ -29,3 +29,5 @@
      **NOTE:** you will need a RemoteSigned ExecutionPolicy for the next command as well, so returning the ExectionPolicy to the prior configuration should be done after step 8.
 
 8. Run `yarn start`
+
+9. Copy the produced link and paste it in your web browser to run the application.
