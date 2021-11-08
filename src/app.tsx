@@ -1,97 +1,111 @@
 import { render } from "react-dom";
-import { Component, createRef } from "react";
+import { Component, createContext, createRef, useContext } from "react";
 import { Container, Form, Button, ListGroup, Nav } from "react-bootstrap";
 import { BrowserRouter, NavLink } from "react-router-dom";
 import { Routes, Route } from "react-router";
-import { Poser, poser } from "./poser";
+import { poser } from "./poser";
+import { observable, action, autorun, makeObservable } from "mobx";
+import { observer } from "mobx-react";
 
-interface PoseAppState {
-    poseStatus: string,
-}
-class PoseApp extends Component<{}, PoseAppState> {
+
+@observer
+class PoseApp extends Component {
     canvas = createRef<HTMLCanvasElement>();
-    poser: Poser;
-
-    constructor(props) {
-        super(props);
-        this.poser = poser();
-    }
 
     componentDidMount() {
-        this.poser.setCanvas(this.canvas.current);
+        poser().setCanvas(this.canvas.current!);
     }
 
     render() {
         return <Container>
             <h2>Pose Review</h2>
+            <p>{poser().status}</p>
             <canvas width="1280px" height="720px" ref={this.canvas}></canvas>
         </Container>;
     }
 }
 
-class TodoApp extends Component<{}, { items: Item[], text: string }> {
-    constructor(props) {
-        super(props);
-        this.state = { items: [], text: '' };
+interface TodoItem {
+    id: any,
+    text: string,
+}
+
+class Todos {
+    items: TodoItem[] = [];
+    draft = '';
+
+    constructor() {
+        makeObservable(this, {
+            items: observable,
+            draft: observable,
+            addTodo: action,
+            setDraft: action,
+        });
+        autorun(() => console.log(this.items.map(item => `- ${item.text}`).join('\n')));
     }
 
+    addTodo() {
+        this.items.push({
+            id: Date.now(),
+            text: this.draft,
+        });
+        this.draft = '';
+    }
+
+    setDraft(draft: string) {
+        this.draft = draft;
+    }
+}
+
+@observer
+class TodoList extends Component<{ items: TodoItem[] }> {
     render() {
+        return <ListGroup>
+            {
+                this.props.items.map(item => (
+                    <ListGroup.Item key={item.id}>{item.text}</ListGroup.Item>
+                ))
+            }
+        </ListGroup>;
+    }
+};
+
+@observer
+class TodoApp extends Component<{ todos: Todos }> {
+    render() {
+        let t = this.props.todos;
+
+        function handleSubmit(e) {
+            e.preventDefault();
+            t.addTodo();
+        }
+
         return (
             <Container>
                 <h3>TODO</h3>
-                <TodoList items={this.state.items} />
-                <Form onSubmit={this.handleSubmit}>
+                <p>You have {t.items.length} tasks to do.</p>
+                <TodoList items={t.items} />
+                <Form onSubmit={handleSubmit}>
                     <Form.Group>
                         <Form.Label>
                             What needs to be done?
                         </Form.Label>
                         <Form.Control
-                            onChange={e => this.setState({ text: e.target.value })}
-                            value={this.state.text}
+                            onChange={e => t.setDraft(e.target.value)}
+                            value={t.draft}
                         />
                     </Form.Group>
 
                     <Button type="submit">
-                        Add #{this.state.items.length + 1}
+                        Add task #{t.items.length + 1}
                     </Button>
                 </Form>
             </Container >
         );
     }
+};
 
-    handleSubmit = (e) => {
-        e.preventDefault();
-        if (this.state.text.length === 0) {
-            return;
-        }
-        this.setState(state => ({
-            items: state.items.concat({
-                text: this.state.text,
-                id: Date.now(),
-            }),
-            text: ''
-        }));
-    }
-}
-
-interface Item {
-    id: any,
-    text: string,
-}
-
-class TodoList extends Component<{ items: Item[] }> {
-    render() {
-        return (
-            <ListGroup>
-                {
-                    this.props.items.map(item => (
-                        <ListGroup.Item key={item.id}>{item.text}</ListGroup.Item>
-                    ))
-                }
-            </ListGroup>
-        );
-    }
-}
+const todos = new Todos();
 
 render(
     <BrowserRouter>
@@ -105,7 +119,7 @@ render(
         </Nav>
         <Routes>
             <Route path="/" element={<PoseApp />} />
-            <Route path="/todos" element={<TodoApp />} />
+            <Route path="/todos" element={<TodoApp todos={todos} />} />
         </Routes>
     </BrowserRouter>,
     document.getElementById('app')

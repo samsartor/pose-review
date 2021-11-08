@@ -1,6 +1,7 @@
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { Pose, POSE_CONNECTIONS, Results as PoseResults, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
+import { observable, action, makeObservable } from "mobx";
 
 class PoseDisplay {
     ctx: CanvasRenderingContext2D;
@@ -49,6 +50,7 @@ class PoseDisplay {
 
 // Mediapipe needs to be able to find all of these files. By importing them here
 // with `require(..)` we make sure parcel crates URLs for them.
+/*
 const POSE_FILES = {
     'pose_landmark_full.tflite': require('url:@mediapipe/pose/pose_landmark_full.tflite'),
     'pose_landmark_heavy.tflite': require('url:@mediapipe/pose/pose_landmark_heavy.tflite'),
@@ -62,14 +64,21 @@ const POSE_FILES = {
     'pose_solution_wasm_bin.wasm': require('url:@mediapipe/pose/pose_solution_wasm_bin.wasm'),
     'pose_web.binarypb': require('url:@mediapipe/pose/pose_web.binarypb'),
 };
+*/
 
 
 export class Poser {
     pose: Pose;
     cam: Camera;
     display: PoseDisplay | null = null;
+    status: string = 'Loading';
 
     constructor() {
+        makeObservable(this, {
+            status: observable,
+            setStatus: action,
+        });
+
         this.pose = new Pose({
             // locateFile: path => POSE_FILES[path],
             locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
@@ -91,8 +100,11 @@ export class Poser {
             }
         });
         this.pose.initialize()
-            .then(() => console.log('Loaded mediapipe pose'))
-            .catch(e => console.error(e));
+            .then(() => this.setStatus('Loaded'))
+            .catch(e => {
+                this.setStatus(`Error while loading: ${e}`);
+                console.error(e);
+            });
 
         let video = document.getElementById('camera') as HTMLVideoElement;
         const camera = new Camera(video, {
@@ -103,6 +115,10 @@ export class Poser {
             height: 720
         });
         camera.start();
+    }
+
+    setStatus(msg: string) {
+        this.status = msg;
     }
 
     setCanvas(canvas: HTMLCanvasElement) {

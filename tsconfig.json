@@ -1,0 +1,12 @@
+{
+    "compilerOptions": {
+        "skipLibCheck": true,
+        "target": "es6",
+        "module": "commonjs",
+        "jsx": "preserve",
+        "strictNullChecks": true,
+        "noImplicitThis": true,
+        "experimentalDecorators": true,
+        "useDefineForClassFields": true
+    }
+}
