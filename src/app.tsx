@@ -108,7 +108,7 @@ class TodoApp extends Component<{ todos: Todos }> {
 const todos = new Todos();
 
 render(
-    <BrowserRouter>
+    <BrowserRouter basename={location.pathname}>
         <Nav as="ul">
             <Nav.Item as="li">
                 <Nav.Link as={NavLink} to="/">Pose</Nav.Link>
