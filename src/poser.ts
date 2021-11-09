@@ -48,34 +48,17 @@ class PoseDisplay {
     }
 }
 
-// Mediapipe needs to be able to find all of these files. By importing them here
-// with `require(..)` we make sure parcel crates URLs for them.
-/*
-const POSE_FILES = {
-    'pose_landmark_full.tflite': require('url:@mediapipe/pose/pose_landmark_full.tflite'),
-    'pose_landmark_heavy.tflite': require('url:@mediapipe/pose/pose_landmark_heavy.tflite'),
-    'pose_landmark_lite.tflite': require('url:@mediapipe/pose/pose_landmark_lite.tflite'),
-    'pose_solution_packed_assets_loader.js': require('url:@mediapipe/pose/pose_solution_packed_assets_loader.js'),
-    'pose_solution_packed_assets.data': require('url:@mediapipe/pose/pose_solution_packed_assets.data'),
-    'pose_solution_simd_wasm_bin.data': require('url:@mediapipe/pose/pose_solution_simd_wasm_bin.data'),
-    'pose_solution_simd_wasm_bin.js': require('url:@mediapipe/pose/pose_solution_simd_wasm_bin.js'),
-    'pose_solution_simd_wasm_bin.wasm': require('url:@mediapipe/pose/pose_solution_simd_wasm_bin.wasm'),
-    'pose_solution_wasm_bin.js': require('url:@mediapipe/pose/pose_solution_wasm_bin.js'),
-    'pose_solution_wasm_bin.wasm': require('url:@mediapipe/pose/pose_solution_wasm_bin.wasm'),
-    'pose_web.binarypb': require('url:@mediapipe/pose/pose_web.binarypb'),
-};
-*/
-
-
 export class Poser {
     pose: Pose;
     cam: Camera;
     display: PoseDisplay | null = null;
     status: string = 'Loading';
+    results: PoseResults | null = null;
 
     constructor() {
         makeObservable(this, {
             status: observable,
+            results: observable,
             setStatus: action,
         });
 
@@ -93,6 +76,7 @@ export class Poser {
             minTrackingConfidence: 0.5
         });
         this.pose.onResults(r => {
+            this.results = r;
             try {
                 this.display!.update(r)
             } catch (_) {

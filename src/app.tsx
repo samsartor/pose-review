@@ -1,11 +1,17 @@
 import { render } from "react-dom";
 import { Component, createContext, createRef, useContext } from "react";
-import { Container, Form, Button, ListGroup, Nav } from "react-bootstrap";
+import { Container, Form, Button, ListGroup, Nav, Table } from "react-bootstrap";
 import { BrowserRouter, NavLink } from "react-router-dom";
 import { Routes, Route } from "react-router";
 import { poser } from "./poser";
 import { observable, action, autorun, makeObservable } from "mobx";
 import { observer } from "mobx-react";
+import { POSE_LANDMARKS } from "@mediapipe/pose";
+
+let LANDMARK_NAMES = new Map<number, string>();
+for (let [name, index] of Object.entries(POSE_LANDMARKS)) {
+    LANDMARK_NAMES.set(index, name);
+}
 
 
 @observer
@@ -21,6 +27,28 @@ class PoseApp extends Component {
             <h2>Pose Review</h2>
             <p>{poser().status}</p>
             <canvas width="1280px" height="720px" ref={this.canvas}></canvas>
+            <Table>
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th>X</th>
+                        <th>Y</th>
+                        <th>Z</th>
+                    </tr>
+                </thead>
+                {
+                    poser().results?.poseLandmarks?.map(({ x, y, z, visibility }, index) => {
+                        if (visibility != undefined && visibility > 0.5) {
+                            return <tr>
+                                <th>{LANDMARK_NAMES.get(index)}</th>
+                                <th>{x.toFixed(3)}</th>
+                                <th>{y.toFixed(3)}</th>
+                                <th>{z.toFixed(3)}</th>
+                            </tr>;
+                        }
+                    })
+                }
+            </Table>
         </Container>;
     }
 }
