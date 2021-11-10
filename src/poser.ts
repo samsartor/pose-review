@@ -15,6 +15,8 @@ class PoseDisplay {
         if (!document.contains(this.canvas)) {
             throw Error('canvas is unmounted');
         }
+        this.canvas.width = results.image.width;
+        this.canvas.height = results.image.height;
 
         if (!results.poseLandmarks) {
             // this.grid.updateLandmarks([]);
@@ -47,64 +49,61 @@ class PoseDisplay {
     }
 }
 
-export class Vector {
-    private buffer = new ArrayBuffer(0);
+export class Recorder implements Iterable<number> {
+    private buffer: Float32Array;
+    private start = 0;
     private len = 0;
 
+    constructor(size: number) {
+        this.buffer = new Float32Array(size);
+    }
+
     push(x: number) {
-        if (this.len * 4 == this.buffer.byteLength) {
-            let old_array = this.array;
-            this.buffer = new ArrayBuffer(Math.max(this.buffer.byteLength * 2, 32));
-            this.array.set(old_array);
+        if (this.len < this.buffer.length) {
+            this.buffer[this.len] = x;
+            this.len++;
+        } else {
+            this.buffer[this.start] = x;
+            this.start = (this.start + 1) % this.len;
         }
-
-        new Float32Array(this.buffer, this.len * 4, 1)[0] = x;
-        this.len += 1;
     }
 
-    get array(): Float32Array {
-        return new Float32Array(this.buffer, 0, this.len);
+    last(): number {
+        let i = this.start;
+        if (i == 0) {
+            i = this.len;
+        }
+        if (i == 0) {
+            throw Error('recorder is empty');
+        }
+        return this.buffer[i - 1];
     }
 
-    [Symbol.iterator]() {
-        return this.array;
+    array(): Float32Array {
+        let out = new Float32Array(this.len);
+        out.set(this.buffer.subarray(this.start, this.len));
+        out.set(this.buffer.subarray(0, this.start), this.len - this.start);
+        return out;
+    }
+
+    *[Symbol.iterator]() {
+        for (let i = 0; i < this.len; i++) {
+            yield this.buffer[(this.start + i) % this.len];
+        }
     }
 }
 
 export type LANDMARK_NAME = keyof typeof POSE_LANDMARKS;
+export let LANDMARK_NAMES = new Map<number, LANDMARK_NAME>();
+for (let [name, index] of Object.entries(POSE_LANDMARKS)) {
+    LANDMARK_NAMES.set(index, name as LANDMARK_NAME);
+}
 
-export class LandmarkHistory {
-    t = new Vector();
-    x = new Vector();
-    y = new Vector();
-    z = new Vector();
-    readonly name: LANDMARK_NAME;
-    readonly stop: () => void;
-
-    constructor(poser: Poser, name: LANDMARK_NAME) {
-        makeObservable(this, {
-            t: observable,
-            x: observable,
-            y: observable,
-            z: observable,
-        });
-        this.name = name;
-        this.stop = autorun(() => {
-            if (poser.sample != null) {
-                this.addSample(poser.sample);
-            }
-        });
-    }
-
-    addSample(s: Sample) {
-        let lm = s.poseWorldLandmarks[POSE_LANDMARKS[this.name]];
-        if (lm.visibility != null && lm.visibility > 0.5) {
-            this.t.push(s.t);
-            this.x.push(lm.x);
-            this.y.push(lm.y);
-            this.z.push(lm.z);
-        }
-    }
+interface LandmarkRecorder {
+    x: Recorder,
+    y: Recorder,
+    z: Recorder,
+    vis: Recorder,
 }
 
 export interface Sample extends PoseResults {
@@ -116,11 +115,13 @@ export class Poser {
     every_ms: number;
     status: string = 'Loading';
     sample: Sample | null = null;
+    history: Map<LANDMARK_NAME, LandmarkRecorder> = new Map();
 
     pose: Pose;
     cam: Camera;
     display: PoseDisplay | null = null;
 
+    private history_len: number = 128;
     private base_t: Date;
 
     constructor() {
@@ -145,14 +146,7 @@ export class Poser {
             minDetectionConfidence: 0.5,
             minTrackingConfidence: 0.5
         });
-        this.pose.onResults(r => {
-            this.setSample(r);
-            try {
-                this.display!.update(r)
-            } catch (_) {
-                this.display = null;
-            }
-        });
+        this.pose.onResults(r => this.setSample(r));
         this.pose.initialize()
             .then(() => this.setStatus('Loaded'))
             .catch(e => {
@@ -165,8 +159,6 @@ export class Poser {
             onFrame: async () => {
                 await this.pose.send({ image: video });
             },
-            width: 1280,
-            height: 720
         });
         camera.start();
     }
@@ -178,6 +170,32 @@ export class Poser {
             timestamp: t,
             t: (t.getTime() - this.base_t.getTime()) / 1000.,
         };
+
+        if (this.sample.poseWorldLandmarks != null) {
+            for (let [index, name] of LANDMARK_NAMES) {
+                let into = this.history.get(name);
+                if (into == null) {
+                    into = {
+                        x: new Recorder(this.history_len),
+                        y: new Recorder(this.history_len),
+                        z: new Recorder(this.history_len),
+                        vis: new Recorder(this.history_len),
+                    };
+                    this.history.set(name, into);
+                }
+                let from = this.sample.poseWorldLandmarks[index];
+                into.x.push(from.x);
+                into.y.push(from.y);
+                into.z.push(from.z);
+                into.vis.push(from.visibility || 0);
+            }
+        }
+
+        try {
+            this.display!.update(this.sample)
+        } catch (_) {
+            this.display = null;
+        }
     }
 
     setStatus(msg: string) {
