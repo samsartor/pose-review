@@ -34,7 +34,7 @@ export class Poser {
         });
 
         this.pose.setOptions({
-            modelComplexity: 2,
+            modelComplexity: 1,
             smoothLandmarks: true,
             enableSegmentation: false,
             smoothSegmentation: false,

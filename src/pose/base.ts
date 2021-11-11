@@ -10,6 +10,8 @@ export interface Sample {
     normedPose: NormalizedLandmarkList,
 }
 
+type LandmarkElem = 'x' | 'y' | 'z' | 'visibility';
+
 export class Recorder implements Iterable<Sample> {
     private buffer: Sample[] = [];
     private size: number;
@@ -41,17 +43,20 @@ export class Recorder implements Iterable<Sample> {
         }
     }
 
-    list(name: LandmarkName, element: 'x' | 'y' | 'z' | 'vis'): Float32Array {
+    list(name: LandmarkName, element: LandmarkElem, normed = false): Float32Array {
         let out = new Float32Array(this.buffer.length);
         let i = 0;
         let index = POSE_LANDMARKS[name];
-        for (let sample of this) {
-            if (element == 'vis') {
-                out[i] = sample.pose[index].visibility || 0;
-            } else {
-                out[i] = sample.pose[index][element];
+        if (normed) {
+            for (let sample of this) {
+                out[i] = sample.normedPose[index][element] || 0;
+                i++;
             }
-            i++;
+        } else {
+            for (let sample of this) {
+                out[i] = sample.pose[index][element] || 0;
+                i++;
+            }
         }
         return out;
     }

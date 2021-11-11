@@ -1,5 +1,6 @@
 import { drawConnectors, drawLandmarks } from "@mediapipe/drawing_utils";
 import { POSE_CONNECTIONS } from "@mediapipe/pose";
+import { LANDMARK_NAMES } from ".";
 import { Recorder } from "./base";
 
 export class PoseDisplay {
@@ -9,6 +10,25 @@ export class PoseDisplay {
     constructor(canvas: HTMLCanvasElement) {
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d')!;
+    }
+
+    drawTrails(results: Recorder) {
+        for (let name of LANDMARK_NAMES) {
+            let xs = results.list(name, 'x', true);
+            let ys = results.list(name, 'y', true);
+            if (xs.length == 0) {
+                return;
+            }
+
+            this.ctx.lineWidth = 1;
+            this.ctx.strokeStyle = '#507aa1';
+            this.ctx.beginPath();
+            this.ctx.moveTo(xs[0] * this.canvas.width, ys[0] * this.canvas.height);
+            for (let i = 1; i < xs.length; i++) {
+                this.ctx.lineTo(xs[i] * this.canvas.width, ys[i] * this.canvas.height);
+            }
+            this.ctx.stroke();
+        }
     }
 
     update(results: Recorder, frame: HTMLVideoElement) {
@@ -38,10 +58,11 @@ export class PoseDisplay {
         this.ctx.drawImage(frame, 0, 0, this.canvas.width, this.canvas.height);
 
         this.ctx.globalCompositeOperation = 'source-over';
+        this.drawTrails(results);
         drawConnectors(this.ctx, results.last()?.normedPose, POSE_CONNECTIONS,
-            { color: '#00FF00', lineWidth: 4 });
+            { color: '#77ba43', lineWidth: 4 });
         drawLandmarks(this.ctx, results.last()?.normedPose,
-            { color: '#FF0000', lineWidth: 2 });
+            { color: '#eb4034', lineWidth: 2 });
         this.ctx.restore();
 
         // this.grid.updateLandmarks(results.poseWorldLandmarks);
