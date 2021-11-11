@@ -1,4 +1,4 @@
-import { LANDMARK_NAME as LandmarkName, poser } from "../poser";
+import { LandmarkName, LANDMARK_NAMES, poser } from "../pose";
 import Plot from 'react-plotly.js';
 import { observer } from "mobx-react";
 import { Component, createRef, ReactElement } from "react";
@@ -34,13 +34,12 @@ export class PoseApp extends Component {
     }
 
     updatePlot(name: LandmarkName) {
-        let landmark = poser().history.get(name)!;
         this.plot = [
             {
                 type: "scatter3d",
-                x: landmark.x.array(),
-                y: landmark.y.array(),
-                z: landmark.z.array(),
+                x: poser().data.list(name, 'x'),
+                y: poser().data.list(name, 'y'),
+                z: poser().data.list(name, 'z'),
                 marker: {
                     size: 1,
                 }
@@ -50,12 +49,14 @@ export class PoseApp extends Component {
 
     updateTable() {
         this.table = [];
-        if (poser().history != null) {
-            for (let [name, landmark] of poser().history) {
-                if (landmark.vis.last() < 0.5) {
+        let data = poser().data.last();
+        if (data != null) {
+            for (let [index, landmark] of data.pose.entries()) {
+                if (landmark.visibility == null || landmark.visibility < 0.5) {
                     continue;
                 }
 
+                let name = LANDMARK_NAMES[index];
                 this.table.push(<tr key={name}>
                     <th>
                         {name}
@@ -67,9 +68,9 @@ export class PoseApp extends Component {
                             plot
                         </Button>
                     </th>
-                    <th>{landmark.x.last().toFixed(3)}</th>
-                    <th>{landmark.y.last().toFixed(3)}</th>
-                    <th>{landmark.z.last().toFixed(3)}</th>
+                    <th>{landmark.x.toFixed(3)}</th>
+                    <th>{landmark.y.toFixed(3)}</th>
+                    <th>{landmark.z.toFixed(3)}</th>
                 </tr>);
             }
         }
