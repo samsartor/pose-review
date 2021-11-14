@@ -6,11 +6,18 @@ export let LANDMARK_NAMES = [...Object.keys(POSE_LANDMARKS)] as LandmarkName[];
 export interface Sample {
     t: number,
     timestamp: Date,
-    pose: LandmarkList,
-    normedPose: NormalizedLandmarkList,
+    worldPose: LandmarkList,
+    screenPose: NormalizedLandmarkList,
 }
 
-type LandmarkElem = 'x' | 'y' | 'z' | 'visibility';
+export interface Summary {
+    delay: number,
+    mean_t: number,
+    mean: number,
+    slope: number,
+}
+
+type LandmarkElem = 'x' | 'y' | 'z' | 't' | 'visibility';
 
 export class Recorder implements Iterable<Sample> {
     private buffer: Sample[] = [];
@@ -43,22 +50,65 @@ export class Recorder implements Iterable<Sample> {
         }
     }
 
-    list(name: LandmarkName, element: LandmarkElem, normed = false): Float32Array {
+    list(name: LandmarkName, element: LandmarkElem, world = true): Float32Array {
         let out = new Float32Array(this.buffer.length);
         let i = 0;
         let index = POSE_LANDMARKS[name];
-        if (normed) {
+        if (element == 't') {
             for (let sample of this) {
-                out[i] = sample.normedPose[index][element] || 0;
+                out[i] = sample.t;
+                i++;
+            }
+        } else if (world) {
+            for (let sample of this) {
+                out[i] = sample.worldPose[index][element] || 0;
                 i++;
             }
         } else {
             for (let sample of this) {
-                out[i] = sample.pose[index][element] || 0;
+                out[i] = sample.screenPose[index][element] || 0;
                 i++;
             }
         }
         return out;
+    }
+
+    summarize(name: LandmarkName, element: LandmarkElem, delay: number, world = true): Summary {
+        let ts = this.list(name, 't', world);
+        let vs = this.list(name, 'visibility', world);
+        let xs = this.list(name, element, world);
+        let n = xs.length;
+        if (n == 0) {
+            throw Error('no data');
+        }
+
+        let end_t = ts[n - 1];
+        let mean_t = end_t - delay;
+        let lambda = 1 / delay;
+
+        let weight_sum = 0;
+
+        let mean = 0;
+        for (let i = 0; i < n; i++) {
+            let weight = lambda * Math.exp(lambda * (ts[i] - end_t)) * vs[i];
+            mean += weight * xs[i];
+            weight_sum += weight;
+        }
+        mean /= weight_sum;
+
+        let covariance = 0;
+        for (let i = 0; i < n; i++) {
+            let weight = lambda * Math.exp(lambda * (ts[i] - end_t)) * vs[i];
+            covariance += weight * (xs[i] - mean) * (ts[i] - mean_t);
+        }
+        covariance /= weight_sum;
+
+        return {
+            delay,
+            mean_t,
+            mean,
+            slope: covariance / (delay * delay),
+        };
     }
 
     get length(): number {

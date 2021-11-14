@@ -6,16 +6,18 @@ import { Recorder } from "./base";
 export class PoseDisplay {
     ctx: CanvasRenderingContext2D;
     canvas: HTMLCanvasElement;
+    delay: number;
 
-    constructor(canvas: HTMLCanvasElement) {
+    constructor(canvas: HTMLCanvasElement, delay: number) {
+        this.delay = delay;
         this.canvas = canvas;
         this.ctx = canvas.getContext('2d')!;
     }
 
     drawTrails(results: Recorder) {
         for (let name of LANDMARK_NAMES) {
-            let xs = results.list(name, 'x', true);
-            let ys = results.list(name, 'y', true);
+            let xs = results.list(name, 'x', false);
+            let ys = results.list(name, 'y', false);
             if (xs.length == 0) {
                 return;
             }
@@ -28,6 +30,24 @@ export class PoseDisplay {
                 this.ctx.lineTo(xs[i] * this.canvas.width, ys[i] * this.canvas.height);
             }
             this.ctx.stroke();
+        }
+    }
+
+    drawArrows(results: Recorder) {
+        const DELAY = 0.2;
+
+        for (let name of LANDMARK_NAMES) {
+            try {
+                let xs = results.summarize(name, 'x', this.delay, false);
+                let ys = results.summarize(name, 'y', this.delay, false);
+
+                this.ctx.lineWidth = 2;
+                this.ctx.strokeStyle = '#c75c2a';
+                this.ctx.beginPath();
+                this.ctx.moveTo(xs.mean * this.canvas.width, ys.mean * this.canvas.height);
+                this.ctx.lineTo((xs.mean + xs.slope) * this.canvas.width, (ys.mean + ys.slope) * this.canvas.height);
+                this.ctx.stroke();
+            } catch { }
         }
     }
 
@@ -59,9 +79,10 @@ export class PoseDisplay {
 
         this.ctx.globalCompositeOperation = 'source-over';
         this.drawTrails(results);
-        drawConnectors(this.ctx, results.last()?.normedPose, POSE_CONNECTIONS,
+        drawConnectors(this.ctx, results.last()?.screenPose, POSE_CONNECTIONS,
             { color: '#77ba43', lineWidth: 4 });
-        drawLandmarks(this.ctx, results.last()?.normedPose,
+        this.drawArrows(results);
+        drawLandmarks(this.ctx, results.last()?.screenPose,
             { color: '#eb4034', lineWidth: 2 });
         this.ctx.restore();
 

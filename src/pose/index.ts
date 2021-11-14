@@ -73,8 +73,8 @@ export class Poser {
             this.data.push({
                 timestamp,
                 t,
-                pose: x.poseWorldLandmarks,
-                normedPose: x.poseLandmarks,
+                worldPose: x.poseWorldLandmarks,
+                screenPose: x.poseLandmarks,
             });
         }
 
@@ -91,8 +91,8 @@ export class Poser {
         this.status = msg;
     }
 
-    setCanvas(canvas: HTMLCanvasElement) {
-        this.display = new PoseDisplay(canvas);
+    setDisplay(canvas: HTMLCanvasElement, delay: number) {
+        this.display = new PoseDisplay(canvas, delay);
     }
 }
 
