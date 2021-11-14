@@ -20,7 +20,7 @@ export class Poser {
 
     constructor() {
         this.base_t = new Date();
-        this.data = new Recorder(128);
+        this.data = new Recorder(64);
         this.pose = new Pose({
             // locateFile: path => POSE_FILES[path],
             locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
@@ -34,7 +34,7 @@ export class Poser {
         });
 
         this.pose.setOptions({
-            modelComplexity: 1,
+            modelComplexity: 2,
             smoothLandmarks: true,
             enableSegmentation: false,
             smoothSegmentation: false,

@@ -96,7 +96,6 @@ export class PoseApp extends Component {
 
     render() {
         return <Container>
-            <h2>Pose Review</h2>
             <p>{poser().status}</p>
             <canvas ref={this.canvas}></canvas>
             <Form style={{ "maxWidth": "500px" }} >

@@ -18,6 +18,7 @@
     "typescript": ">=3.0.0"
   },
   "dependencies": {
+    "@math.gl/core": "^3.5.6",
     "@mediapipe/camera_utils": "^0.3.1632432234",
     "@mediapipe/control_utils": "^0.6.1629159505",
     "@mediapipe/control_utils_3d": "^0.3.1635987963",
