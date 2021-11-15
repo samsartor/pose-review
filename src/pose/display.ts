@@ -38,8 +38,8 @@ export class PoseDisplay {
 
         for (let name of LANDMARK_NAMES) {
             try {
-                let xs = results.summarize(name, 'x', this.delay, false);
-                let ys = results.summarize(name, 'y', this.delay, false);
+                let xs = results.fit(name, 'x', this.delay, false);
+                let ys = results.fit(name, 'y', this.delay, false);
 
                 this.ctx.lineWidth = 2;
                 this.ctx.strokeStyle = '#c75c2a';

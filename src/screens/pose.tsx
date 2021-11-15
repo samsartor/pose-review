@@ -1,4 +1,4 @@
-import { LandmarkName, LANDMARK_NAMES, poser } from "../pose";
+import { LandmarkName, LANDMARK_NAMES, POSER } from "../pose";
 import Plot from 'react-plotly.js';
 import { observer } from "mobx-react";
 import { Component, createRef, ReactElement } from "react";
@@ -27,7 +27,7 @@ export class PoseApp extends Component {
         });
         autorun(() => {
             let delay = this.delay;
-            let display = poser().display;
+            let display = POSER.display;
             if (display != null) {
                 display.delay = delay;
             }
@@ -35,7 +35,8 @@ export class PoseApp extends Component {
     }
 
     componentDidMount() {
-        poser().setDisplay(this.canvas.current!, this.delay);
+        POSER.start();
+        POSER.setDisplay(this.canvas.current!, this.delay);
         this.updateTable();
         this.interval = setInterval(() => this.updateTable(), 500);
     }
@@ -48,9 +49,9 @@ export class PoseApp extends Component {
         this.plot = [
             {
                 type: "scatter3d",
-                x: poser().data.list(name, 'x'),
-                y: poser().data.list(name, 'y'),
-                z: poser().data.list(name, 'z'),
+                x: POSER.data.list(name, 'x'),
+                y: POSER.data.list(name, 'y'),
+                z: POSER.data.list(name, 'z'),
                 marker: {
                     size: 1,
                 }
@@ -60,7 +61,7 @@ export class PoseApp extends Component {
 
     updateTable() {
         this.table = [];
-        let data = poser().data.last();
+        let data = POSER.data.last();
         if (data != null) {
             for (let [index, landmark] of data.worldPose.entries()) {
                 if (landmark.visibility == null || landmark.visibility < 0.5) {
@@ -96,7 +97,6 @@ export class PoseApp extends Component {
 
     render() {
         return <Container>
-            <p>{poser().status}</p>
             <canvas ref={this.canvas}></canvas>
             <Form style={{ "maxWidth": "500px" }} >
                 <Form.Group as={Row}>

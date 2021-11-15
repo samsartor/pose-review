@@ -1,3 +1,4 @@
+import { Vector3 } from "@math.gl/core";
 import { LandmarkList, NormalizedLandmarkList, POSE_LANDMARKS } from "@mediapipe/pose";
 
 export type LandmarkName = keyof typeof POSE_LANDMARKS;
@@ -10,11 +11,16 @@ export interface Sample {
     screenPose: NormalizedLandmarkList,
 }
 
-export interface Summary {
+export interface Fit {
     delay: number,
     mean_t: number,
     mean: number,
     slope: number,
+}
+
+export interface Summary {
+    pos: { [name in LandmarkName]: Vector3 },
+    vel: { [name in LandmarkName]: Vector3 },
 }
 
 type LandmarkElem = 'x' | 'y' | 'z' | 't' | 'visibility';
@@ -73,7 +79,7 @@ export class Recorder implements Iterable<Sample> {
         return out;
     }
 
-    summarize(name: LandmarkName, element: LandmarkElem, delay: number, world = true): Summary {
+    fit(name: LandmarkName, element: LandmarkElem, delay: number, world = true): Fit {
         let ts = this.list(name, 't', world);
         let vs = this.list(name, 'visibility', world);
         let xs = this.list(name, element, world);
@@ -109,6 +115,19 @@ export class Recorder implements Iterable<Sample> {
             mean,
             slope: covariance / (delay * delay),
         };
+    }
+
+    summarize(delay: number, world = true): Summary {
+        let pos: any = {};
+        let vel: any = {};
+        for (let name of LANDMARK_NAMES) {
+            let x = this.fit(name, 'x', delay, world);
+            let y = this.fit(name, 'y', delay, world);
+            let z = this.fit(name, 'z', delay, world);
+            pos[name] = new Vector3(x.mean, y.mean, z.mean);
+            vel[name] = new Vector3(x.slope, y.slope, z.slope);
+        }
+        return { pos, vel };
     }
 
     get length(): number {

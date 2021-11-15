@@ -8,29 +8,38 @@ export { Recorder, Sample, LandmarkName, LANDMARK_NAMES } from "./base";
 
 export class Poser {
     every_ms: number;
-    status: string = 'Loading';
+    status: string = 'Waiting';
     data: Recorder;
 
-    pose: Pose;
-    cam: Camera;
+    pose: Pose | null = null;
+    cam: Camera | null = null;
     display: PoseDisplay | null = null;
-    video: HTMLVideoElement;
+    video: HTMLVideoElement | null = null;
 
     private base_t: Date;
 
     constructor() {
         this.base_t = new Date();
         this.data = new Recorder(64);
-        this.pose = new Pose({
-            // locateFile: path => POSE_FILES[path],
-            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
-        });
-
         makeObservable(this, {
             status: observable,
             data: observable.ref,
+            start: action,
             setStatus: action,
             onResults: action,
+        });
+
+    }
+
+    start() {
+        if (this.pose != null) {
+            return;
+        }
+
+        this.status = 'Loading';
+        this.pose = new Pose({
+            // locateFile: path => POSE_FILES[path],
+            locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
         });
 
         this.pose.setOptions({
@@ -56,7 +65,7 @@ export class Poser {
         this.video = document.getElementById('camera')! as HTMLVideoElement;
         const camera = new Camera(this.video, {
             onFrame: async () => {
-                await this.pose.send({ image: this.video });
+                await this.pose!.send({ image: this.video! });
             },
         });
         camera.start();
@@ -80,7 +89,7 @@ export class Poser {
 
         if (this.display != null) {
             try {
-                this.display.update(this.data, this.video);
+                this.display.update(this.data, this.video!);
             } catch (e) {
                 this.display = null;
             }
@@ -96,11 +105,4 @@ export class Poser {
     }
 }
 
-let POSER: Poser | null;
-
-export function poser(): Poser {
-    if (POSER == null) {
-        POSER = new Poser();
-    }
-    return POSER;
-}
+export let POSER = new Poser();
