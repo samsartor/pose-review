@@ -5,6 +5,7 @@ import { Routes, Route } from "react-router";
 import { Todos, TodoApp } from "./screens/todos";
 import { PoseApp } from "./screens/pose";
 import { ViolinApp } from "./screens/violin";
+import { SquatAppManager } from "./screens/squat/squat_app_manager";
 import { Component } from "react";
 import { observer } from "mobx-react";
 import { POSER } from "./pose";
@@ -28,6 +29,9 @@ class App extends Component {
                     <Nav.Link as={NavLink} to="/violin">Violin</Nav.Link>
                 </Nav.Item>
                 <Nav.Item as="li">
+                    <Nav.Link as={NavLink} to="/squat">Squat</Nav.Link>
+                </Nav.Item>
+                <Nav.Item as="li">
                     <Nav.Link as={NavLink} to="/todos">TODO</Nav.Link>
                 </Nav.Item>
                 <Nav.Item>
@@ -38,6 +42,7 @@ class App extends Component {
                 <Route path="/" element={<PoseApp />} />
                 <Route path="/todos" element={<TodoApp todos={todos} />} />
                 <Route path="/violin" element={<ViolinApp />} />
+                <Route path="/squat" element={<SquatAppManager />} />
             </Routes>
         </BrowserRouter>;
     }
