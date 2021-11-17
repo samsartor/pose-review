@@ -20,7 +20,7 @@
    - If you have a windows machine, you may run into difficulty with your ExecutionPolicy. If you do, run:
      - `Get-ExecutionPolicy`
      
-     This will tell you the system's current configuration (call it '<RESULT>'). To run "yarn install", you will likely have to run:
+     This will tell you the system's current configuration (call it \<RESULT\>). To run "yarn install", you will likely have to run:
      - `Set-ExecutionPolicy -Scope CurrentUser -ExecutionPolicy RemoteSigned`
      
      Aftwerwards, you may switch it back to the previous configuration, if desired, with:
