@@ -6,6 +6,13 @@ import { AdvancedConfigPage } from "./advanced_config_page";
 import { MainPage } from "./main_page";
 import { Button } from "react-bootstrap";
 
+// Enumeration to allow for case switching in the render function
+const pageState = {
+    START: "start",
+    CONFIG: "config",
+    RUNNING: "running"
+}
+var currentState = pageState.START;
 
 /**
  * This class manages the portion of the application dedicated to letting the
@@ -39,9 +46,38 @@ export class SquatAppManager extends Component {
     // main_page = new main_page
     // display main_page
     render() {
+        switch (currentState) {
+            case pageState.START:
+                return (
+                    <>
+                    <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
+                    <Button as="input" type="submit" size='lg' value="Advanced Config" />
+                    </>
+                );
+            case pageState.CONFIG:
+                return (
+                    <>
+                    <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
+                    <Button as="input" type="submit" size='lg' value="Advanced Config" />
+                    </>
+                );
 
-        return (
-            <><Button as="input" type="submit" value="Easy Config" />{' '} <Button as="input" type="submit" value="Advanced Config" /></>
-        );
+            case pageState.RUNNING:
+                return (
+                    <>
+                    <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
+                    <Button as="input" type="submit" size='lg' value="Advanced Config" />
+                    </>
+                );
+
+            case else:
+                return (
+                    <>
+                    <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
+                    <Button as="input" type="submit" size='lg' value="Advanced Config" />
+                    </>
+                );
+
+        }
     }
 }
