@@ -1,7 +1,24 @@
+import { Vector3 } from "@math.gl/core";
+import { action, makeObservable, observable, computed } from "mobx";
 import { observer } from "mobx-react";
-import { Component } from "react";
-import { Button } from "react-bootstrap";
+import { Component, createRef } from "react";
+import { Button, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
+import { POSER } from "../../pose";
+import { SQUAT_CONFIG } from "./config_data";
+
+type VelocityDir = 'up' | 'down' | 'zero';
+
+function velToVelDir(vel: Vector3): VelocityDir {
+    const tolerance = 0.1;
+    if (vel.z < -tolerance) {
+        return 'down';
+    } else if (vel.z > tolerance) {
+        return 'up';
+    } else {
+        return 'zero';
+    }
+}
 
 /**
  * This class functions as the primary use page for the portion of the
@@ -19,9 +36,56 @@ import { Link } from "react-router-dom";
  */
 @observer
 export class MainPage extends Component {
+    canvas = createRef<HTMLCanvasElement>();
+    repCount = 0;
+    hipAngle: 'wide' | 'moderate' | 'narrow';
+    velocity: Vector3 = new Vector3();
+    interval;
+
+    constructor(props) {
+        super(props);
+        makeObservable(this, {
+            repCount: observable,
+            velocityDirection: computed,
+            // hipAngle: observable,
+            // depth: computed,
+            evaluateRules: action,
+        });
+    }
+
+    componentDidMount() {
+        POSER.start();
+        POSER.setDisplay(this.canvas.current!, 0.1);
+        this.interval = setInterval(() => this.evaluateRules(), 100); // 100 ms
+    }
+
+    evaluateRules() {
+        let s = POSER.data.summarize(0.1, false);
+        let newVelocity = s.vel.LEFT_HIP.clone().add(s.vel.RIGHT_HIP).scale(0.5);
+        console.log(newVelocity);
+        let newDir = velToVelDir(newVelocity);
+        if (newDir == 'up' && this.velocityDirection != 'up') {
+            this.repCount += 1;
+        }
+        this.velocity = newVelocity; 
+    }
+
+    get velocityDirection(): VelocityDir {
+        return velToVelDir(this.velocity);
+    }
+
+    componentWillUnmount() {
+        clearInterval(this.interval);
+    }
+
     render() {
-        return <>
-            Main
-        </>;
+        return <Container>
+            <Row className="justify-content-md-center">
+                <Col sm="12" md="6">
+                    <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
+                </Col>
+            </Row>
+            { this.velocityDirection } -- { this.repCount }
+        </Container>;
     }
 }

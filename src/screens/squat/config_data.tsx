@@ -1,4 +1,4 @@
-import { computed, makeObservable, observable } from "mobx";
+import { action, computed, makeObservable, observable } from "mobx";
 
 export type StanceVariations = "wide" | "moderate" | "narrow";
 
@@ -8,7 +8,12 @@ export class ConfigData {
     constructor() {
         makeObservable(this, {
             stance: observable,
+            setStance: action,
         });
+    }
+
+    setStance(stance: StanceVariations) {
+        this.stance = stance;
     }
 }
 
