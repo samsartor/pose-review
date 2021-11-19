@@ -19,7 +19,7 @@ var currentState = pageState.START;
  * user analyze their squats. The primary function of this class is to act as a
  * container for persistent data, and to act as a screen manager that changes
  * what the user sees as appropriate.
- * 
+ *
  * The manager avoids requiring a copious number of pages from being created
  * seperately.
  */
@@ -32,7 +32,7 @@ export class SquatAppManager extends Component {
     // display start_page
     // easy_or_advanced = result of start_page
 
-    
+
     // Make EasyConfigPage or AdvancedConfigPage, display it, and store the
     // results (appropriate/desired squat stance width) respectively
 
@@ -63,14 +63,6 @@ export class SquatAppManager extends Component {
                 );
 
             case pageState.RUNNING:
-                return (
-                    <>
-                    <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
-                    <Button as="input" type="submit" size='lg' value="Advanced Config" />
-                    </>
-                );
-
-            case else:
                 return (
                     <>
                     <Button as="input" type="submit" size='lg' value="Easy Config" />{' '}
