@@ -97,9 +97,13 @@ export class PoseApp extends Component {
 
     render() {
         return <Container>
-            <canvas ref={this.canvas}></canvas>
+            <Row className="justify-content-md-center">
+                <Col sm="12" md="6">
+                    <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
+                </Col>
+            </Row>
             <Form style={{ "maxWidth": "500px" }} >
-                <Form.Group as={Row}>
+                <Form.Group>
                     <Form.Label column sm="3">
                         Motion delay =
                     </Form.Label>
@@ -118,8 +122,8 @@ export class PoseApp extends Component {
                     </Col>
                 </Form.Group>
             </Form>
-            <h3>Visible Landmarks</h3>
-            <Table>
+            <h3 className="mt-4">Visible Landmarks</h3>
+            <Table responsive="md">
                 <thead>
                     <tr>
                         <th></th>
@@ -133,8 +137,12 @@ export class PoseApp extends Component {
             {
                 this.plot ?
                     <>
-                        <h3>Landmark History</h3>
-                        <Plot data={this.plot} width="600" height="600" />
+                        <h3 className="mt-4">Landmark History</h3>
+                        <Row className="justify-content-md-center">
+                            <Col sm="12" md="6">
+                                <Plot data={this.plot} width="600" height="600" style={{ width: '100%', height: 'auto' }} />
+                            </Col>
+                        </Row>
                     </>
                     : null
             }

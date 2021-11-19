@@ -2,7 +2,7 @@ import { Vector3 } from "@math.gl/core";
 import { action, computed, makeObservable, observable } from "mobx";
 import { observer } from "mobx-react";
 import { Component, createRef, Ref } from "react";
-import { Container } from "react-bootstrap";
+import { Container, Row, Col } from "react-bootstrap";
 import { POSER } from "../pose";
 
 @observer
@@ -90,7 +90,11 @@ export class ViolinApp extends Component {
     render() {
         return <Container>
             <p>Angle = {this.angleDeg.toFixed(1)}°</p>
-            <canvas width="600" height="200" ref={this.canvas} />
+            <Row className="justify-content-md-center">
+                <Col sm="12" md="6">
+                    <canvas style={{ width: '100%', height: 'auto' }} width="600" height="200" ref={this.canvas} />
+                </Col>
+            </Row>
         </Container>;
     }
 }
