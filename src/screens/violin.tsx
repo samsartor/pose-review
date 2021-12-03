@@ -4,6 +4,26 @@ import { observer } from "mobx-react";
 import { Component, createRef, Ref } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { POSER } from "../pose";
+import { Simulation, State } from "../state";
+
+function makeBowSim(): Simulation {
+    let sim = new Simulation();
+    let up_bow = new State('good', 'up bow');
+    let down_bow = new State('good', 'down bow');
+    sim.connect({
+        a: up_bow,
+        b: down_bow,
+        delay: 0.2,
+        ratio(data) {
+            if (data.vel['RIGHT_WRIST'].y < 0) {
+                return 0;
+            } else {
+                return 1;
+            }
+        }
+    });
+    return sim;
+}
 
 @observer
 export class ViolinApp extends Component {
