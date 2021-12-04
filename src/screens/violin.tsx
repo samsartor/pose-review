@@ -4,23 +4,20 @@ import { observer } from "mobx-react";
 import { Component, createRef, Ref } from "react";
 import { Container, Row, Col } from "react-bootstrap";
 import { POSER } from "../pose";
-import { Simulation, State } from "../state";
+import { signToState, Simulation, State } from "../state";
 
 function makeBowSim(): Simulation {
     let sim = new Simulation();
     let up_bow = new State('good', 'up bow');
     let down_bow = new State('good', 'down bow');
+    let unknown = new State('warn', 'unknown');
+    unknown.start();
     sim.connect({
-        a: up_bow,
-        b: down_bow,
-        delay: 0.2,
-        ratio(data) {
-            if (data.vel['RIGHT_WRIST'].y < 0) {
-                return 0;
-            } else {
-                return 1;
-            }
-        }
+        from: [up_bow, down_bow, unknown],
+        to(data) {
+            return signToState(data.vel['RIGHT_WRIST'].y, down_bow, up_bow, unknown);
+        },
+        delay: 0.05,
     });
     return sim;
 }
@@ -30,11 +27,16 @@ export class ViolinApp extends Component {
     interval;
     angle: number = 0.;
     canvas = createRef<HTMLCanvasElement>();
+    sim = makeBowSim();
+    currentState: string = 'none';
+    measures: Array<[string, number]> = [];
 
     constructor(props) {
         super(props);
         makeObservable(this, {
             angle: observable,
+            currentState: observable,
+            measures: observable,
             angleDeg: computed,
             update: action,
         });
@@ -42,7 +44,7 @@ export class ViolinApp extends Component {
 
     componentDidMount() {
         POSER.start();
-        this.interval = setInterval(() => this.update(), 100);
+        this.interval = setInterval(() => this.update(), 10);
     }
 
     componentWillUnmount() {
@@ -52,6 +54,14 @@ export class ViolinApp extends Component {
     update() {
         try {
             let s = POSER.data.summarize(0.1, false);
+
+            this.sim.step(s, 0.01);
+            this.currentState = this.sim.mode.name;
+            this.measures = [];
+            for (let state of this.sim.states) {
+                this.measures.push([state.name, state.measure]);
+            }
+
             let upper = s.pos.RIGHT_ELBOW.clone().subtract(s.pos.RIGHT_SHOULDER);
             let lower = s.pos.RIGHT_WRIST.clone().subtract(s.pos.RIGHT_ELBOW);
             let norm = upper.clone().cross(lower);
@@ -110,6 +120,10 @@ export class ViolinApp extends Component {
     render() {
         return <Container>
             <p>Angle = {this.angleDeg.toFixed(1)}°</p>
+            <p>State = {this.currentState}</p>
+            {
+                this.measures.map(([name, measure]) => <p>{name} = {measure.toFixed(2)}</p>)
+            }
             <Row className="justify-content-md-center">
                 <Col sm="12" md="6">
                     <canvas style={{ width: '100%', height: 'auto' }} width="600" height="200" ref={this.canvas} />

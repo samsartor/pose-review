@@ -26,24 +26,39 @@ export class State {
     }
 }
 
-// .--------------------------------------------.
-// | oneway | ratio | after delay | eventually  |
-// |        |       | A    | B    | A    | B    |
-// |--------|-------|------|------|------|------|
-// | *      | 0.0   |######|      |######|      |
-// | false  | 0.5   |##### |#     |###   |###   |
-// | true   | 0.5   |####  |##    |      |######|
-// | *      | 1.0   |###   |###   |      |######|
-// .--------------------------------------------.
+export type States = State | State[] | Map<State, number>;
+
+function divideUpValue(states: States, value: number, normalize: boolean, each: (state: State, value: number) => void) {
+    if (states instanceof State) {
+        each(states, value);
+    } else if (Array.isArray(states)) {
+        for (let state of states) {
+            if (normalize) {
+                each(state, value / states.length);
+            } else {
+                each(state, value);
+            }
+        }
+    } else {
+        let total_weight = 0;
+        if (normalize) {
+            for (let weight of states.values()) {
+                total_weight += weight;
+            }
+        } else {
+            total_weight += 1;
+        }
+        for (let [state, weight] of states) {
+            each(state, weight / total_weight * value);
+        }
+    }
+}
+
 export interface Edge {
-    a: State,
-    b: State,
-    // How long it will take to move 50% of A to B when ratio=1
+    from: States,
+    to(data: Summary): States,
+    // How long it will take to move 50% from A to B
     delay: number,
-    // True if B can _not_ move to A when ratio=0
-    oneway?: boolean,
-    // The fraction which should move to B vs move to A
-    ratio(data: Summary): number,
 }
 
 export class Simulation {
@@ -52,8 +67,7 @@ export class Simulation {
 
     connect(edge: Edge) {
         this.edges.add(edge);
-        this.states.add(edge.a);
-        this.states.add(edge.b);
+        divideUpValue(edge.from, 0, false, state => this.states.add(state));
     }
 
     get mode(): State {
@@ -69,7 +83,12 @@ export class Simulation {
     }
 
     step(data: Summary, dt: number) {
-        for (let { a, b, delay, oneway, ratio } of this.edges) {
+        for (let { from, to, delay } of this.edges) {
+            let to_states = to(data);
+            if ((Array.isArray(to_states) && to_states.length == 0) || (to_states instanceof Map && to_states.size == 0)) {
+                continue;
+            }
+
             // x(0) = state.measure
             // x(delay) = state.measure / 2
             // x' = -a * x
@@ -80,28 +99,35 @@ export class Simulation {
 
             // Calculate how much measure is leaving each state to be
             // redistributed by this edge.
-            let from_a = a.measure * alpha * dt;
-            let from_b: number;
-            if (oneway) {
-                from_b = 0;
-            } else {
-                from_b = b.measure * alpha * dt;
-            }
+            let to_redistribute = 0;
+            divideUpValue(from, alpha, false, (state, alpha) => {
+                let from_state = state.measure * alpha * dt;
+                // Technically this allows the measure to go negative, but that
+                // should be self-correcting.
+                state.measure -= from_state;
+                // Redistribute to other states.
+                to_redistribute += from_state;
+            })
 
-            // Technically this allows the measure to go negative, but that
-            // should be self-correcting.
-            a.measure -= from_a;
-            b.measure -= from_b;
-
-            // Redistribute combined measure.
-            let r = ratio(data);
-            let m = from_a + from_b;
-            b.measure += m * r;
-            a.measure += m * (1 - r);
+            // Figure out how much should be distributed to each state.
+            divideUpValue(to_states, to_redistribute, true, (state, measure) => {
+                this.states.add(state);
+                state.measure += measure;
+            });
         }
 
         for (let state of this.states) {
             state.total += state.measure * dt;
         }
+    }
+}
+
+export function signToState(val: number, positive: States, negative: States, zero: States = [], margin = 0.1): States {
+    if (val >= margin) {
+        return positive;
+    } else if (val <= -margin) {
+        return negative;
+    } else {
+        return zero;
     }
 }
