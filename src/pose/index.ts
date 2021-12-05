@@ -3,6 +3,7 @@ import { Camera } from "@mediapipe/camera_utils";
 import { observable, action, makeObservable } from "mobx";
 import { PoseDisplay } from './display';
 import { Recorder } from "./base";
+import { Simulation } from "../state";
 
 export { Recorder, Sample, LandmarkName, LANDMARK_NAMES } from "./base";
 
@@ -16,7 +17,10 @@ export class Poser {
     display: PoseDisplay | null = null;
     video: HTMLVideoElement | null = null;
 
+    sims: Set<Simulation> = new Set();
+
     private base_t: Date;
+    private previous_timestep = 0;
 
     constructor() {
         this.base_t = new Date();
@@ -24,9 +28,12 @@ export class Poser {
         makeObservable(this, {
             status: observable,
             data: observable.ref,
+            sims: observable,
             start: action,
             setStatus: action,
             onResults: action,
+            addSimulation: action,
+            removeSimulation: action,
         });
 
     }
@@ -94,6 +101,13 @@ export class Poser {
                 this.display = null;
             }
         }
+
+        let sum = this.data.summarize(1 / 15);
+        for (let sim of this.sims) {
+            sim.step(sum, t - this.previous_timestep);
+        }
+
+        this.previous_timestep = t;
     }
 
     setStatus(msg: string) {
@@ -102,6 +116,14 @@ export class Poser {
 
     setDisplay(canvas: HTMLCanvasElement, delay: number) {
         this.display = new PoseDisplay(canvas, delay);
+    }
+
+    addSimulation(sim: Simulation) {
+        this.sims.add(sim);
+    }
+
+    removeSimulation(sim: Simulation) {
+        this.sims.delete(sim);
     }
 }
 

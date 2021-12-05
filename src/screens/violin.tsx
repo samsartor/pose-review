@@ -6,28 +6,35 @@ import { Container, Row, Col } from "react-bootstrap";
 import { POSER } from "../pose";
 import { signToState, Simulation, State } from "../state";
 
-function makeBowSim(): Simulation {
-    let sim = new Simulation();
-    let up_bow = new State('good', 'up bow');
-    let down_bow = new State('good', 'down bow');
-    let unknown = new State('warn', 'unknown');
-    unknown.start();
-    sim.connect({
-        from: [up_bow, down_bow, unknown],
-        to(data) {
-            return signToState(data.vel['RIGHT_WRIST'].y, down_bow, up_bow, unknown);
-        },
-        delay: 0.05,
-    });
-    return sim;
-}
+let direction = new Simulation();
+let up_dir = new State('good', 'up bow');
+let down_dir = new State('good', 'down bow');
+let unknown_dir = new State('warn', 'unknown bowing');
+direction.connect({
+    from: [up_dir, down_dir, unknown_dir],
+    to(data) {
+        return signToState(data.vel['RIGHT_WRIST'].y, down_dir, up_dir, unknown_dir);
+    },
+    delay: 0.05,
+});
+
+let level = new Simulation();
+let level_high = new State('bad', 'left hand too high');
+let level_low = new State('bad', 'left hand too low');
+let level_correct = new State('good', 'left hand correct');
+level.connect({
+    from: [level_high, level_low, level_correct],
+    to(data) {
+        return signToState(data.pos['LEFT_WRIST'].y - data.pos['LEFT_SHOULDER'].y, level_low, level_high, level_correct, 0.1);
+    },
+    delay: 0.2,
+});
 
 @observer
 export class ViolinApp extends Component {
     interval;
     angle: number = 0.;
     canvas = createRef<HTMLCanvasElement>();
-    sim = makeBowSim();
     currentState: string = 'none';
     measures: Array<[string, number]> = [];
 
@@ -44,10 +51,18 @@ export class ViolinApp extends Component {
 
     componentDidMount() {
         POSER.start();
+        direction.reset();
+        unknown_dir.start();
+        POSER.addSimulation(direction);
+        level.reset();
+        level_correct.start();
+        POSER.addSimulation(level);
         this.interval = setInterval(() => this.update(), 10);
     }
 
     componentWillUnmount() {
+        POSER.removeSimulation(direction);
+        POSER.removeSimulation(level);
         clearInterval(this.interval);
     }
 
@@ -55,10 +70,12 @@ export class ViolinApp extends Component {
         try {
             let s = POSER.data.summarize(0.1, false);
 
-            this.sim.step(s, 0.01);
-            this.currentState = this.sim.mode.name;
+            this.currentState = `${level.mode.name} + ${direction.mode.name}`
             this.measures = [];
-            for (let state of this.sim.states) {
+            for (let state of level.states) {
+                this.measures.push([state.name, state.measure]);
+            }
+            for (let state of direction.states) {
                 this.measures.push([state.name, state.measure]);
             }
 

@@ -120,6 +120,12 @@ export class Simulation {
             state.total += state.measure * dt;
         }
     }
+
+    reset() {
+        for (let state of this.states) {
+            state.reset();
+        }
+    }
 }
 
 export function signToState(val: number, positive: States, negative: States, zero: States = [], margin = 0.1): States {
