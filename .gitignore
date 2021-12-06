@@ -1,4 +1,5 @@
 node_modules/
 dist/
+!dist/404.html
 .parcel-cache
 *.log
