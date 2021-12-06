@@ -1,3 +1,4 @@
+import { action, makeObservable, observable } from "mobx";
 import { Summary, Recorder } from "./pose/base";
 
 export type StateStatus = 'good' | 'none' | 'bad';
@@ -6,6 +7,7 @@ export class State {
     readonly status: StateStatus;
     readonly name: string;
     readonly window: number;
+    readonly position: [number, number] | null;
 
     transitions: Array<(data: Summary) => State>;
 
@@ -25,10 +27,17 @@ export class Simulation {
     readonly start: State;
     states: Set<State> = new Set();
     mode: State;
+    displayMode: State;
 
     constructor(start: State) {
         this.start = start;
         this.reset();
+        makeObservable(this, {
+            mode: observable.ref,
+            displayMode: observable.ref,
+            step: action,
+            reset: action,
+        })
     }
 
     step(recorder: Recorder, dt: number) {
@@ -36,10 +45,15 @@ export class Simulation {
         for (let func of this.mode.transitions) {
             this.mode = func(data);
         }
+
+        if (this.displayMode.status != 'bad' || this.mode.status == 'good') {
+            this.displayMode = this.mode;
+        }
     }
 
     reset() {
         this.mode = this.start;
+        this.displayMode = this.start;
     }
 }
 

@@ -1,17 +1,19 @@
 import { Pose, Results, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
-import { observable, action, makeObservable } from "mobx";
+import { observable, action, makeObservable, autorun } from "mobx";
 import { PoseDisplay } from './display';
 import { Recorder } from "./base";
 import { Simulation } from "../state";
 import { Component, createRef } from "react";
-import { Col, Row } from "react-bootstrap";
+import { Col, Row, Spinner } from "react-bootstrap";
+import { observer } from "mobx-react";
 
 export { Recorder, Sample, LandmarkName, LANDMARK_NAMES } from "./base";
 
 export class Poser {
     every_ms: number;
     status: string = 'Off';
+    ready: boolean = false;
     data: Recorder;
 
     pose: Pose | null = null;
@@ -29,6 +31,7 @@ export class Poser {
         this.data = new Recorder(64);
         makeObservable(this, {
             status: observable,
+            ready: observable,
             data: observable.ref,
             sims: observable,
             start: action,
@@ -45,7 +48,7 @@ export class Poser {
             return;
         }
 
-        this.status = 'Loading';
+        this.setStatus('Loading', false);
         this.pose = new Pose({
             // locateFile: path => POSE_FILES[path],
             locateFile: file => `https://cdn.jsdelivr.net/npm/@mediapipe/pose@${VERSION}/${file}`,
@@ -63,11 +66,11 @@ export class Poser {
         this.pose.initialize()
             .then(() => {
                 if (this.status == 'Loading') {
-                    this.setStatus('Waiting')
+                    this.setStatus('Waiting', false)
                 }
             })
             .catch(e => {
-                this.setStatus(`Error while loading: ${e}`);
+                this.setStatus(`Error while loading: ${e}`, true);
                 console.error(e);
             });
 
@@ -81,8 +84,8 @@ export class Poser {
     }
 
     onResults(x: Results) {
-        if (this.status != 'Running') {
-            this.setStatus('Running');
+        if (!this.ready) {
+            this.setStatus('Running', true);
         }
 
         let timestamp = new Date();
@@ -110,8 +113,9 @@ export class Poser {
         this.previous_timestep = t;
     }
 
-    setStatus(msg: string) {
+    setStatus(msg: string, ready: boolean) {
         this.status = msg;
+        this.ready = ready;
     }
 
     setDisplay(canvas: HTMLCanvasElement, delay: number) {
@@ -127,22 +131,30 @@ export class Poser {
     }
 }
 
+@observer
 export class PoserCanvas extends Component<{ delay: number }> {
     canvas = createRef<HTMLCanvasElement>();
 
+
     constructor(props) {
         super(props);
-    }
-
-    componentDidMount() {
-        POSER.setDisplay(this.canvas.current!, this.props.delay);
+        makeObservable(this, {
+            canvas: observable.deep,
+        });
+        autorun(() => {
+            if (this.canvas.current != null) {
+                POSER.setDisplay(this.canvas.current, this.props.delay);
+            }
+        });
     }
 
     render() {
         return <Row className="justify-content-md-center">
-            <Col sm="12" md="6" >
-                <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
-            </Col>
+            <Col sm="12" md="6" className="d-flex justify-content-md-center mb-4">{
+                POSER.ready ?
+                    <canvas className="border border-dark rounded" style={{ width: '100%', height: 'auto', padding: 0 }} ref={this.canvas}></canvas> :
+                    <Spinner animation="border" className="mx-auto"></Spinner>
+            }</Col>
         </Row>
     }
 }

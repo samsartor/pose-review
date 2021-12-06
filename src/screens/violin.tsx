@@ -6,6 +6,7 @@ import { Container, Row, Col } from "react-bootstrap";
 import { POSER, PoserCanvas } from "../pose";
 import { Summary } from "../pose/base";
 import { signToState, Simulation, State } from "../state";
+import { StateView } from "../stateview";
 
 let up_dir = new State('good', 'up bow', 1 / 10);
 let down_dir = new State('good', 'down bow', 1 / 10);
@@ -70,9 +71,16 @@ export class ViolinApp extends Component {
     }
 
     render() {
-        return <Container>
+        return <Container className="my-4">
             <PoserCanvas delay={0.1} />
-            <p>State = {this.currentState}</p>
-        </Container>;
+            <Row>
+                <Col md="6">
+                    <StateView sim={level} />
+                </Col>
+                <Col md="6">
+                    <StateView sim={direction} />
+                </Col>
+            </Row>
+        </Container >;
     }
 }

@@ -94,7 +94,7 @@ export class DebugApp extends Component {
     }
 
     render() {
-        return <Container>
+        return <Container className="my-4">
             <PoserCanvas delay={this.delay} />
             <Form style={{ "maxWidth": "500px" }} >
                 <Form.Group>
