@@ -1,6 +1,6 @@
 import { observer } from "mobx-react";
 import { Component } from "react";
-import { Button } from "react-bootstrap";
+import { Button, Container } from "react-bootstrap";
 import { Link } from "react-router-dom";
 
 /**
@@ -10,13 +10,13 @@ import { Link } from "react-router-dom";
 @observer
 export class StartPage extends Component {
     render() {
-        return <>
+        return <Container>
             <Link to="/squat/easy_config">
                 <Button size='lg'>Easy Config</Button>
             </Link>
             <Link to="/squat/advanced_config">
                 <Button size='lg'>Advanced Config</Button>
             </Link>
-        </>;
+        </Container>;
     }
 }

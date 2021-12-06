@@ -4,7 +4,7 @@ import { observer } from "mobx-react";
 import { Component, createRef } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
-import { POSER } from "../../pose";
+import { POSER, PoserCanvas } from "../../pose";
 import { SQUAT_CONFIG } from "./config_data";
 
 type VelocityDir = 'up' | 'down' | 'zero';
@@ -36,7 +36,6 @@ function velToVelDir(vel: Vector3): VelocityDir {
  */
 @observer
 export class MainPage extends Component {
-    canvas = createRef<HTMLCanvasElement>();
     repCount = 0;
     hipAngle: 'wide' | 'moderate' | 'narrow';
     velocity: Vector3 = new Vector3();
@@ -55,7 +54,6 @@ export class MainPage extends Component {
 
     componentDidMount() {
         POSER.start();
-        POSER.setDisplay(this.canvas.current!, 0.1);
         this.interval = setInterval(() => this.evaluateRules(), 100); // 100 ms
     }
 
@@ -67,7 +65,7 @@ export class MainPage extends Component {
         if (newDir == 'up' && this.velocityDirection != 'up') {
             this.repCount += 1;
         }
-        this.velocity = newVelocity; 
+        this.velocity = newVelocity;
     }
 
     get velocityDirection(): VelocityDir {
@@ -80,12 +78,8 @@ export class MainPage extends Component {
 
     render() {
         return <Container>
-            <Row className="justify-content-md-center">
-                <Col sm="12" md="6">
-                    <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
-                </Col>
-            </Row>
-            { this.velocityDirection } -- { this.repCount }
+            <PoserCanvas delay={0.1} />
+            {this.velocityDirection} -- {this.repCount}
         </Container>;
     }
 }

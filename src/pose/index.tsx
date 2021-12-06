@@ -4,12 +4,14 @@ import { observable, action, makeObservable } from "mobx";
 import { PoseDisplay } from './display';
 import { Recorder } from "./base";
 import { Simulation } from "../state";
+import { Component, createRef } from "react";
+import { Col, Row } from "react-bootstrap";
 
 export { Recorder, Sample, LandmarkName, LANDMARK_NAMES } from "./base";
 
 export class Poser {
     every_ms: number;
-    status: string = 'Waiting';
+    status: string = 'Off';
     data: Recorder;
 
     pose: Pose | null = null;
@@ -61,7 +63,7 @@ export class Poser {
         this.pose.initialize()
             .then(() => {
                 if (this.status == 'Loading') {
-                    this.setStatus('Connecting')
+                    this.setStatus('Waiting')
                 }
             })
             .catch(e => {
@@ -122,6 +124,26 @@ export class Poser {
 
     removeSimulation(sim: Simulation) {
         this.sims.delete(sim);
+    }
+}
+
+export class PoserCanvas extends Component<{ delay: number }> {
+    canvas = createRef<HTMLCanvasElement>();
+
+    constructor(props) {
+        super(props);
+    }
+
+    componentDidMount() {
+        POSER.setDisplay(this.canvas.current!, this.props.delay);
+    }
+
+    render() {
+        return <Row className="justify-content-md-center">
+            <Col sm="12" md="6" >
+                <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
+            </Col>
+        </Row>
     }
 }
 

@@ -18,25 +18,6 @@ export class PoseDisplay {
         this.ctx = canvas.getContext('2d')!;
     }
 
-    drawTrails(results: Recorder) {
-        for (let name of LANDMARK_NAMES) {
-            let xs = results.list(name, 'z', false);
-            let ys = results.list(name, 'y', false);
-            if (xs.length == 0) {
-                return;
-            }
-
-            this.ctx.lineWidth = 1;
-            this.ctx.strokeStyle = '#507aa1';
-            this.ctx.beginPath();
-            this.ctx.moveTo(-xs[0] * this.canvas.width, ys[0] * this.canvas.height);
-            for (let i = 1; i < xs.length; i++) {
-                this.ctx.lineTo(-xs[i] * this.canvas.width, ys[i] * this.canvas.height);
-            }
-            this.ctx.stroke();
-        }
-    }
-
     drawArrows(results: Recorder) {
         let w = this.canvas.width / 2;
         let h = this.canvas.height;
@@ -83,6 +64,25 @@ export class PoseDisplay {
         }
     }
 
+    drawLandmarks(results: Recorder) {
+        let w = this.canvas.width / 2;
+        let h = this.canvas.height;
+        let poss = results.last();
+        if (poss == null) {
+            return;
+        }
+        for (let pos of poss.screenPose) {
+            this.ctx.lineWidth = 0;
+            this.ctx.fillStyle = '#589fcc';
+            this.ctx.beginPath();
+            this.ctx.arc(pos.x * w, pos.y * h, 5, 0, 2 * Math.PI);
+            this.ctx.fill();
+            this.ctx.beginPath();
+            this.ctx.arc(scaleZ(pos.z) * w + w, pos.y * h, 5, 0, 2 * Math.PI);
+            this.ctx.fill();
+        }
+    }
+
     update(results: Recorder, frame: HTMLVideoElement) {
         if (!document.contains(this.canvas)) {
             throw Error('canvas is unmounted');
@@ -97,26 +97,16 @@ export class PoseDisplay {
 
         this.ctx.save();
         this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-        //this.ctx.drawImage(results.segmentationMask, 0, 0,
-        //  this.canvas.width, this.canvas.height);
 
-        // Only overwrite existing pixels.
-        this.ctx.globalCompositeOperation = 'source-in';
-        this.ctx.fillStyle = '#00FF00';
-        this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
-
-        // Only overwrite missing pixels.
+        // Draw the video
         this.ctx.globalCompositeOperation = 'destination-atop';
         this.ctx.drawImage(frame, 0, 0, this.canvas.width / 2, this.canvas.height);
 
+        // Draw pose estimation
         this.ctx.globalCompositeOperation = 'source-over';
-        /*drawLandmarks(this.ctx, results.last()?.screenPose,
-            { color: '#eb4034', lineWidth: 2 });*/
-        // this.drawTrails(results);
         this.drawConnectors(results);
+        this.drawLandmarks(results);
         this.drawArrows(results);
         this.ctx.restore();
-
-        // this.grid.updateLandmarks(results.poseWorldLandmarks);
     }
 }

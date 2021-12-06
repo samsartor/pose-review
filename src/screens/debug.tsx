@@ -1,15 +1,14 @@
-import { LandmarkName, LANDMARK_NAMES, POSER } from "../pose";
+import { LandmarkName, LANDMARK_NAMES, POSER, PoserCanvas } from "../pose";
 import Plot from 'react-plotly.js';
 import { observer } from "mobx-react";
-import { Component, createRef, ReactElement } from "react";
+import { Component, ReactElement } from "react";
 import { Container, Table, Button, Form, Row, Col } from "react-bootstrap";
 import { action, autorun, makeObservable, observable } from "mobx";
 import RangeSlider from "react-bootstrap-range-slider";
 
 
 @observer
-export class PoseApp extends Component {
-    canvas = createRef<HTMLCanvasElement>();
+export class DebugApp extends Component {
     table: ReactElement[] = [];
     plot: Plotly.Data[] | null = null;
     delay: number = 0.1;
@@ -36,7 +35,6 @@ export class PoseApp extends Component {
 
     componentDidMount() {
         POSER.start();
-        POSER.setDisplay(this.canvas.current!, this.delay);
         this.updateTable();
         this.interval = setInterval(() => this.updateTable(), 500);
     }
@@ -97,11 +95,7 @@ export class PoseApp extends Component {
 
     render() {
         return <Container>
-            <Row className="justify-content-md-center">
-                <Col sm="12" md="6">
-                    <canvas style={{ width: '100%', height: 'auto' }} ref={this.canvas}></canvas>
-                </Col>
-            </Row>
+            <PoserCanvas delay={this.delay} />
             <Form style={{ "maxWidth": "500px" }} >
                 <Form.Group>
                     <Form.Label column sm="3">
