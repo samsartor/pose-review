@@ -35,18 +35,16 @@ class App extends Component {
                     <Nav.Link disabled>MediaPipe: {POSER.status}</Nav.Link>
                 </Nav.Item>
             </Nav>
-            <div className="my-4">
-                <Routes>
-                    <Route path="/" element={<LandingPage />} />
-                    <Route path="/debug" element={<DebugApp />} />
-                    <Route path="/todos" element={<TodoApp todos={todos} />} />
-                    <Route path="/violin" element={<ViolinApp />} />
-                    <Route path="/squat/start_page" element={<StartPage />} />
-                    <Route path="/squat/easy_config" element={<EasyConfigPage />} />
-                    <Route path="/squat/advanced_config" element={<AdvancedConfigPage />} />
-                    <Route path="/squat/main_page" element={<MainPage />} />
-                </Routes>
-            </div>
+            <Routes>
+                <Route path="/" element={<LandingPage />} />
+                <Route path="/debug" element={<DebugApp />} />
+                <Route path="/todos" element={<TodoApp todos={todos} />} />
+                <Route path="/violin" element={<ViolinApp />} />
+                <Route path="/squat/start_page" element={<StartPage />} />
+                <Route path="/squat/easy_config" element={<EasyConfigPage />} />
+                <Route path="/squat/advanced_config" element={<AdvancedConfigPage />} />
+                <Route path="/squat/main_page" element={<MainPage />} />
+            </Routes>
         </BrowserRouter>;
     }
 }
