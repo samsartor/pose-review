@@ -102,11 +102,9 @@ export class Poser {
             }
         }
 
-        let sum = this.data.summarize(1 / 15);
         for (let sim of this.sims) {
-            sim.step(sum, t - this.previous_timestep);
+            sim.step(this.data, t - this.previous_timestep);
         }
-
         this.previous_timestep = t;
     }
 
