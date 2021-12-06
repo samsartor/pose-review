@@ -102,8 +102,9 @@ export class Simulation {
             let to_redistribute = 0;
             divideUpValue(from, alpha, false, (state, alpha) => {
                 let from_state = state.measure * alpha * dt;
-                // Technically this allows the measure to go negative, but that
-                // should be self-correcting.
+                if (from_state > 0.75 * state.measure) {
+                    from_state = 0.75 * state.measure;
+                }
                 state.measure -= from_state;
                 // Redistribute to other states.
                 to_redistribute += from_state;

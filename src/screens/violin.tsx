@@ -13,7 +13,8 @@ let unknown_dir = new State('warn', 'unknown bowing');
 direction.connect({
     from: [up_dir, down_dir, unknown_dir],
     to(data) {
-        return signToState(data.vel['RIGHT_WRIST'].y, down_dir, up_dir, unknown_dir);
+        let diag_vel = data.vel['RIGHT_WRIST'].y - data.vel['RIGHT_WRIST'].x;
+        return signToState(diag_vel, down_dir, up_dir, unknown_dir);
     },
     delay: 0.05,
 });
@@ -25,7 +26,10 @@ let level_correct = new State('good', 'left hand correct');
 level.connect({
     from: [level_high, level_low, level_correct],
     to(data) {
-        return signToState(data.pos['LEFT_WRIST'].y - data.pos['LEFT_SHOULDER'].y, level_low, level_high, level_correct, 0.1);
+        let arm_len = Math.abs(data.pos['LEFT_SHOULDER'].x - data.pos['LEFT_WRIST'].x);
+        let height_diff = data.pos['LEFT_WRIST'].y - data.pos['LEFT_SHOULDER'].y;
+        let slope = height_diff / arm_len;
+        return signToState(slope - 0.1, level_low, level_high, level_correct, 0.1);
     },
     delay: 0.2,
 });
