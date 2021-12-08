@@ -5,7 +5,7 @@ import { Component, createRef } from "react";
 import { Button, Col, Container, Row } from "react-bootstrap";
 import { Link } from "react-router-dom";
 import { POSER, PoserCanvas } from "../../pose";
-import { Simulation, State } from "../../state";
+import { FuzzySimulation, Simulation, State } from "../../state";
 import { StateView } from "../../stateview";
 import { SQUAT_CONFIG } from "./config_data";
 
@@ -22,10 +22,10 @@ function velToVelDir(vel: Vector3): VelocityDir {
     }
 }
 
-const TOL = 0.0005;
+const TOL = 0.1;
 
 let repTop = new State('none', 'top', 1 / 5);
-repTop.to((data) => {
+repTop.to(1 / 10, (data) => {
     console.log(data.vel.LEFT_HIP.y);
     if (data.vel.LEFT_HIP.y < -TOL) {
         return repDown;
@@ -33,9 +33,9 @@ repTop.to((data) => {
         return repTop;
     }
 });
-let repDown = new State('good', 'down', 1 / 10);
-repDown.to((data) => {
-    if (data.vel.LEFT_HIP.y > -TOL) {
+let repDown = new State('good', 'down', 1 / 15);
+repDown.to(1 / 15, (data) => {
+    if (data.vel.LEFT_HIP.y > 0) {
         if (data.pos.LEFT_HIP.y < data.pos.LEFT_KNEE.y) {
             return hipsBelow;
         } else {
@@ -45,16 +45,8 @@ repDown.to((data) => {
         return repDown;
     }
 });
-let repUp = new State('none', 'up', 1 / 5);
-repUp.to((data) => {
-    if (data.vel.LEFT_HIP.y < TOL) {
-        return repTop;
-    } else {
-        return repUp;
-    }
-});
 let hipsAbove = new State('good', 'hips above knees', 1 / 10);
-hipsAbove.to((data) => {
+hipsAbove.to(1 / 5, (data) => {
     if (data.vel.LEFT_HIP.y > TOL) {
         return repUp;
     } else {
@@ -62,14 +54,22 @@ hipsAbove.to((data) => {
     }
 });
 let hipsBelow = new State('bad', 'hips below knees', 1 / 10);
-hipsBelow.to((data) => {
+hipsBelow.to(1 / 5, (data) => {
     if (data.vel.LEFT_HIP.y > TOL) {
         return repUp;
     } else {
         return hipsBelow;
     }
 });
-let repStates = new Simulation(repTop);
+let repUp = new State('none', 'up', 1 / 5);
+repUp.to(1 / 2, (data) => {
+    if (data.vel.LEFT_HIP.y < TOL) {
+        return repTop;
+    } else {
+        return repUp;
+    }
+});
+let repStates = new FuzzySimulation(repTop);
 
 /**
  * This class functions as the primary use page for the portion of the
@@ -105,6 +105,7 @@ export class MainPage extends Component {
 
     componentDidMount() {
         POSER.start();
+        repStates.reset();
         POSER.addSimulation(repStates);
         this.interval = setInterval(() => this.evaluateRules(), 100); // 100 ms
     }

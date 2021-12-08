@@ -36,7 +36,7 @@ export class DebugApp extends Component {
     componentDidMount() {
         POSER.start();
         this.updateTable();
-        this.interval = setInterval(() => this.updateTable(), 500);
+        this.interval = setInterval(() => this.updateTable(), 100);
     }
 
     componentWillUnmount() {
@@ -59,14 +59,9 @@ export class DebugApp extends Component {
 
     updateTable() {
         this.table = [];
-        let data = POSER.data.last();
-        if (data != null) {
-            for (let [index, landmark] of data.worldPose.entries()) {
-                if (landmark.visibility == null || landmark.visibility < 0.5) {
-                    continue;
-                }
-
-                let name = LANDMARK_NAMES[index];
+        try {
+            let data = POSER.data.summarize(0.1);
+            for (let name of LANDMARK_NAMES) {
                 this.table.push(<tr key={name}>
                     <th>
                         {name}
@@ -78,11 +73,16 @@ export class DebugApp extends Component {
                             plot
                         </Button>
                     </th>
-                    <th>{landmark.x.toFixed(3)}</th>
-                    <th>{landmark.y.toFixed(3)}</th>
-                    <th>{landmark.z.toFixed(3)}</th>
+                    <th>{data.pos[name].x.toFixed(3)}</th>
+                    <th>{data.pos[name].y.toFixed(3)}</th>
+                    <th>{data.pos[name].z.toFixed(3)}</th>
+                    <th>{data.vel[name].x.toFixed(3)}</th>
+                    <th>{data.vel[name].y.toFixed(3)}</th>
+                    <th>{data.vel[name].z.toFixed(3)}</th>
                 </tr>);
             }
+        } catch {
+            this.table = [];
         }
     }
 
@@ -124,6 +124,9 @@ export class DebugApp extends Component {
                         <th>X</th>
                         <th>Y</th>
                         <th>Z</th>
+                        <th>X'</th>
+                        <th>Y'</th>
+                        <th>Z'</th>
                     </tr>
                 </thead>
                 <tbody>{this.table}</tbody>

@@ -28,7 +28,7 @@ export class Poser {
 
     constructor() {
         this.base_t = new Date();
-        this.data = new Recorder(64);
+        this.data = new Recorder(30);
         makeObservable(this, {
             status: observable,
             ready: observable,
