@@ -27,16 +27,16 @@ const TOL = 0.1;
 let repTop = new State('none', 'top', 1 / 5);
 repTop.to(1 / 10, (data) => {
     console.log(data.vel.LEFT_HIP.y);
-    if (data.vel.LEFT_HIP.y < -TOL) {
+    if (data.vel.LEFT_HIP.y + data.vel.RIGHT_HIP.y < -TOL) {
         return repDown;
     } else {
         return repTop;
     }
 });
 let repDown = new State('good', 'down', 1 / 15);
-repDown.to(1 / 15, (data) => {
-    if (data.vel.LEFT_HIP.y > 0) {
-        if (data.pos.LEFT_HIP.y < data.pos.LEFT_KNEE.y) {
+repDown.to(1 / 20, (data) => {
+    if (data.vel.LEFT_HIP.y + data.vel.RIGHT_HIP.y > -0.05) {
+        if (data.pos.LEFT_HIP.y < data.pos.LEFT_KNEE.y || data.pos.RIGHT_HIP.y < data.pos.RIGHT_KNEE.y) {
             return hipsBelow;
         } else {
             return hipsAbove;
@@ -45,25 +45,25 @@ repDown.to(1 / 15, (data) => {
         return repDown;
     }
 });
-let hipsAbove = new State('good', 'hips above knees', 1 / 10);
+let hipsAbove = new State('bad', 'hips above knees', 1 / 10);
 hipsAbove.to(1 / 5, (data) => {
-    if (data.vel.LEFT_HIP.y > TOL) {
+    if (data.vel.LEFT_HIP.y + data.vel.RIGHT_HIP.y > TOL) {
         return repUp;
     } else {
         return hipsAbove;
     }
 });
-let hipsBelow = new State('bad', 'hips below knees', 1 / 10);
+let hipsBelow = new State('good', 'hips below knees', 1 / 10);
 hipsBelow.to(1 / 5, (data) => {
-    if (data.vel.LEFT_HIP.y > TOL) {
+    if (data.vel.LEFT_HIP.y + data.vel.RIGHT_HIP.y > TOL) {
         return repUp;
     } else {
         return hipsBelow;
     }
 });
 let repUp = new State('none', 'up', 1 / 5);
-repUp.to(1 / 2, (data) => {
-    if (data.vel.LEFT_HIP.y < TOL) {
+repUp.to(1 / 5, (data) => {
+    if (data.vel.LEFT_HIP.y + data.vel.RIGHT_HIP.y < TOL) {
         return repTop;
     } else {
         return repUp;
