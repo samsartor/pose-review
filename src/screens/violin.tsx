@@ -18,7 +18,7 @@ function dir_trans(data: Summary) {
 up_dir.to(1 / 10, dir_trans);
 down_dir.to(1 / 10, dir_trans);
 unknown_dir.to(1 / 10, dir_trans);
-let direction = new FuzzySimulation(unknown_dir);
+let direction = new FuzzySimulation('Bow Direction', unknown_dir);
 
 let level_high = new State('bad', 'left hand too high', 1 / 4);
 let level_low = new State('bad', 'left hand too low', 1 / 4);
@@ -32,7 +32,7 @@ function level_trans(data: Summary) {
 level_high.to(1 / 10, level_trans);
 level_low.to(1 / 10, level_trans);
 level_correct.to(1 / 10, level_trans);
-let level = new FuzzySimulation(level_correct);
+let level = new FuzzySimulation('Bow Level', level_correct);
 @observer
 export class ViolinApp extends Component {
     constructor(props) {
@@ -55,6 +55,9 @@ export class ViolinApp extends Component {
     render() {
         return <Container className="my-4">
             <PoserCanvas delay={0.1} />
+            <Row>
+                <h2>Bows: {direction.count(up_dir)} up vs {direction.count(down_dir)} down</h2>
+            </Row>
             <Row>
                 <Col md="6">
                     <StateView sim={level} />

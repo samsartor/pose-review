@@ -5,6 +5,7 @@ import { Component, ReactElement } from "react";
 import { Container, Table, Button, Form, Row, Col } from "react-bootstrap";
 import { action, autorun, makeObservable, observable } from "mobx";
 import RangeSlider from "react-bootstrap-range-slider";
+import { RadioGroup, Radio } from "react-radio-group";
 
 
 @observer
@@ -12,6 +13,7 @@ export class DebugApp extends Component {
     table: ReactElement[] = [];
     plot: Plotly.Data[] | null = null;
     delay: number = 0.1;
+    errorCorrection: boolean = true;
     interval;
 
     constructor(props) {
@@ -23,6 +25,7 @@ export class DebugApp extends Component {
             updatePlot: action,
             updateTable: action,
             setDelay: action,
+            setErrorCorrection: action,
         });
         autorun(() => {
             let delay = this.delay;
@@ -60,7 +63,7 @@ export class DebugApp extends Component {
     updateTable() {
         this.table = [];
         try {
-            let data = POSER.data.summarize(0.1);
+            let data = POSER.data.summarize(0.1, true, this.errorCorrection);
             for (let name of LANDMARK_NAMES) {
                 this.table.push(<tr key={name}>
                     <th>
@@ -93,28 +96,40 @@ export class DebugApp extends Component {
         this.delay = delay;
     }
 
+    setErrorCorrection(ec: boolean) {
+        this.errorCorrection = ec;
+    }
+
     render() {
         return <Container className="my-4">
             <PoserCanvas delay={this.delay} />
             <Form style={{ "maxWidth": "500px" }} >
                 <Form.Group>
-                    <Form.Label column sm="3">
-                        Motion delay =
-                    </Form.Label>
-                    <Col sm="6">
-                        <RangeSlider
-                            value={Math.log2(this.delay)}
-                            min={-6}
-                            max={1}
-                            step={0.5}
-                            tooltip="off"
-                            onChange={(_, v) => this.setDelay(Math.pow(2, v))}
-                        />
-                    </Col>
-                    <Col sm="3">
-                        <Form.Control value={this.delay.toFixed(3) + 's'} readOnly={true} />
-                    </Col>
+                    <Row>
+                        <Form.Label column sm="3">
+                            Motion delay =
+                        </Form.Label>
+                        <Col sm="6">
+                            <RangeSlider
+                                value={Math.log2(this.delay)}
+                                min={-6}
+                                max={1}
+                                step={0.5}
+                                tooltip="off"
+                                onChange={(_, v) => this.setDelay(Math.pow(2, v))}
+                            />
+                        </Col>
+                        <Col sm="3">
+                            <Form.Control value={this.delay.toFixed(3) + 's'} readOnly={true} />
+                        </Col>
+                    </Row>
                 </Form.Group>
+                <Row className="mt-2">
+                    <RadioGroup name="stance" selectedValue={this.errorCorrection ? 1 : 0} onChange={v => this.setErrorCorrection(v != 0)}>
+                        <Form.Check type="radio" as={Radio} value={1} label="Linear Fit (Error Correcting)" />
+                        <Form.Check type="radio" as={Radio} value={0} label="Raw Difference" />
+                    </RadioGroup>
+                </Row>
             </Form>
             <h3 className="mt-4">Visible Landmarks</h3>
             <Table responsive="md">

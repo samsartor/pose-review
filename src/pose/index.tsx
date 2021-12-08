@@ -1,6 +1,6 @@
 import { Pose, Results, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
-import { observable, action, makeObservable, autorun } from "mobx";
+import { observable, action, makeObservable, autorun, IReactionDisposer } from "mobx";
 import { PoseDisplay } from './display';
 import { Recorder } from "./base";
 import { Simulation } from "../state";
@@ -137,26 +137,40 @@ export class Poser {
 
 @observer
 export class PoserCanvas extends Component<{ delay: number }> {
-    canvas = createRef<HTMLCanvasElement>();
-
+    canvas: HTMLCanvasElement | null = null;
+    dispose: IReactionDisposer | null = null;
 
     constructor(props) {
         super(props);
         makeObservable(this, {
-            canvas: observable.deep,
-        });
-        autorun(() => {
-            if (this.canvas.current != null) {
-                POSER.setDisplay(this.canvas.current, this.props.delay);
+            canvas: observable,
+            setCanvas: action,
+        })
+    }
+
+    componentDidMount() {
+        this.dispose = autorun(() => {
+            if (this.canvas != null) {
+                POSER.setDisplay(this.canvas, this.props.delay);
             }
         });
+    }
+
+    componentWillUnmount() {
+        if (this.dispose != null) {
+            this.dispose();
+        }
+    }
+
+    setCanvas(canvas: HTMLCanvasElement | null) {
+        this.canvas = canvas;
     }
 
     render() {
         return <Row className="justify-content-md-center">
             <Col sm="12" md="6" className="d-flex justify-content-md-center mb-4">{
                 POSER.ready ?
-                    <canvas className="border border-dark rounded" style={{ width: '100%', height: 'auto', padding: 0 }} ref={this.canvas}></canvas> :
+                    <canvas className="border border-dark rounded" style={{ width: '100%', height: 'auto', padding: 0 }} ref={c => this.setCanvas(c)}></canvas> :
                     <Spinner animation="border" className="mx-auto"></Spinner>
             }</Col>
         </Row>

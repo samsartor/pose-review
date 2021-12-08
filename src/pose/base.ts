@@ -75,13 +75,15 @@ export class Recorder implements Iterable<Sample> {
         }
 
         let iter: Iterable<Sample>;
+        let out: Float32Array;
         if (tail != undefined) {
             iter = this.slice(this.length - tail, this.length);
+            out = new Float32Array(Math.min(tail, this.length) * names.length);
         } else {
             iter = this;
+            out = new Float32Array(this.length * names.length);
         }
 
-        let out = new Float32Array(this.buffer.length * names.length);
         let i = 0;
         for (let name of names) {
             let index = POSE_LANDMARKS[name];
@@ -98,6 +100,9 @@ export class Recorder implements Iterable<Sample> {
                             sample.worldPose[POSE_LANDMARKS_LEFT.LEFT_HEEL][element]! +
                             sample.worldPose[POSE_LANDMARKS_RIGHT.RIGHT_HEEL][element]!
                         ) / 2;
+                    }
+                    if (element == 'y') {
+                        out[i] *= -1;
                     }
                     i++;
                 }
@@ -180,8 +185,8 @@ export class Recorder implements Iterable<Sample> {
                 y = this.diff(name, 'y', world);
                 z = this.diff(name, 'z', world);
             }
-            pos[name] = new Vector3(x.mean, -y.mean, z.mean);
-            vel[name] = new Vector3(x.slope, -y.slope, z.slope);
+            pos[name] = new Vector3(x.mean, y.mean, z.mean);
+            vel[name] = new Vector3(x.slope, y.slope, z.slope);
         }
 
         return { pos, vel };
@@ -199,7 +204,7 @@ export class Recorder implements Iterable<Sample> {
         let self = this;
         return {
             *[Symbol.iterator]() {
-                for (let i = start; i < end; i++) {
+                for (let i = Math.max(start, 0); i < Math.min(end, self.length); i++) {
                     yield self.buffer[(self.start + i) % self.buffer.length];
                 }
             }

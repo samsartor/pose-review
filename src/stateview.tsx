@@ -28,8 +28,8 @@ export class StateView extends Component<{ sim: Simulation }> {
     updateInfo() {
         if (this.props.sim instanceof FuzzySimulation) {
             this.weightInfo = [];
-            for (let [state, { into, out }] of this.props.sim.weights) {
-                this.weightInfo.push(`${state.name} = ${((into + out) * 100).toFixed(0)}%`);
+            for (let [state, { front, back }] of this.props.sim.weights) {
+                this.weightInfo.push(`${state.name} = ${((front + back) * 100).toFixed(0)}%`);
             }
         } else {
             this.weightInfo = null;
@@ -47,7 +47,7 @@ export class StateView extends Component<{ sim: Simulation }> {
             <Alert variant={variant}>
                 {this.props.sim.displayMode.name}
             </Alert>
-            {this.weightInfo == null ? null : this.weightInfo.map(text => <p>{text}</p>)}
+            {this.weightInfo == null ? null : this.weightInfo.map(text => <>{text}<br /></>)}
         </>;
     }
 }
