@@ -108,7 +108,11 @@ export class Poser {
         }
 
         for (let sim of this.sims) {
-            sim.step(this.data, t - this.previous_timestep);
+            try {
+                sim.step(this.data, t - this.previous_timestep);
+            } catch (e) {
+                console.trace('ERROR WHEN STEPPING:', e)
+            }
         }
         this.previous_timestep = t;
     }

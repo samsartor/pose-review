@@ -1,7 +1,7 @@
 import { Vector3 } from "@math.gl/core";
-import { LandmarkList, NormalizedLandmarkList, POSE_LANDMARKS } from "@mediapipe/pose";
+import { LandmarkList, NormalizedLandmarkList, POSE_LANDMARKS, POSE_LANDMARKS_LEFT, POSE_LANDMARKS_NEUTRAL, POSE_LANDMARKS_RIGHT } from "@mediapipe/pose";
 
-export type LandmarkName = keyof typeof POSE_LANDMARKS;
+export type LandmarkName = keyof typeof POSE_LANDMARKS_NEUTRAL | keyof typeof POSE_LANDMARKS_LEFT | keyof typeof POSE_LANDMARKS_RIGHT;
 export let LANDMARK_NAMES = [...Object.keys(POSE_LANDMARKS)] as LandmarkName[];
 
 export interface Sample {
@@ -124,8 +124,8 @@ export class Recorder implements Iterable<Sample> {
             let x = this.fit(name, 'x', delay, world);
             let y = this.fit(name, 'y', delay, world);
             let z = this.fit(name, 'z', delay, world);
-            pos[name] = new Vector3(x.mean, y.mean, z.mean);
-            vel[name] = new Vector3(x.slope, y.slope, z.slope);
+            pos[name] = new Vector3(x.mean, -y.mean, z.mean);
+            vel[name] = new Vector3(x.slope, -y.slope, z.slope);
         }
         return { pos, vel };
     }
