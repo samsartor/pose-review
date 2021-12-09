@@ -1,5 +1,5 @@
 import { action, makeObservable, observable } from "mobx";
-import { Summary, Recorder } from "./pose/base";
+import { Summary, Recorder, SimLogger } from "./pose/base";
 
 export type StateStatus = 'good' | 'none' | 'bad';
 
@@ -33,7 +33,7 @@ export class Simulation {
     readonly name: string;
     readonly start: State;
     readonly fit: boolean;
-    states: Set<State> = new Set();
+    states: Set<State>;
     mode: State;
     displayMode: State;
 
@@ -43,6 +43,7 @@ export class Simulation {
         this.name = name;
         this.fit = fit;
         this.start = start;
+        this.states = new Set([start]);
         this.reset();
         makeObservable(this, {
             mode: observable.ref,
@@ -61,7 +62,15 @@ export class Simulation {
         }
     }
 
-    step(recorder: Recorder, dt: number) {
+    weight(state: State): number {
+        if (state === this.mode) {
+            return 1;
+        } else {
+            return 0;
+        }
+    }
+
+    step(recorder: Recorder, dt: number, logger: SimLogger) {
         let previous = this.mode;
         let data = recorder.summarize(this.mode.window, true, this.fit);
         this.doStep(data, dt);
@@ -72,6 +81,10 @@ export class Simulation {
 
         if (this.mode.status == 'good' || this.mode.status == 'bad' || this.displayMode.status == 'none') {
             this.displayMode = this.mode;
+        }
+
+        for (let state of this.states) {
+            logger.log(this.name, state.name, this.weight(state), this.count(state));
         }
     }
 
@@ -133,6 +146,11 @@ export class FuzzySimulation extends Simulation {
         }
     }
 
+    weight(state: State): number {
+        let { front, back } = this.weights.get(state) || { front: 0, back: 0 };
+        return front + back;
+    }
+
     doStep(data: Summary, dt: number) {
         for (let state of this.weights.keys()) {
             for (let trans of state.transitions) {
@@ -144,6 +162,7 @@ export class FuzzySimulation extends Simulation {
 
                 let next = trans.func(data);
                 outputs.add(next);
+                this.states.add(next);
 
                 // x(0) = state.measure
                 // x(delay) = state.measure / 2

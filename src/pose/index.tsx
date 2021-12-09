@@ -2,7 +2,7 @@ import { Pose, Results, VERSION } from "@mediapipe/pose"
 import { Camera } from "@mediapipe/camera_utils";
 import { observable, action, makeObservable, autorun, IReactionDisposer } from "mobx";
 import { PoseDisplay } from './display';
-import { Recorder } from "./base";
+import { Recorder, SimLogger } from "./base";
 import { Simulation } from "../state";
 import { Component, createRef } from "react";
 import { Col, Row, Spinner } from "react-bootstrap";
@@ -10,7 +10,7 @@ import { observer } from "mobx-react";
 
 export { Recorder, Sample, LandmarkName, LANDMARK_NAMES } from "./base";
 
-export class Poser {
+export class Poser implements SimLogger {
     every_ms: number;
     status: string = 'Off';
     ready: boolean = false;
@@ -23,24 +23,30 @@ export class Poser {
 
     sims: Set<Simulation> = new Set();
 
+    logs: string[];
+    logging: boolean;
+
     private base_t: Date;
     private previous_timestep = 0;
 
     constructor() {
         this.base_t = new Date();
         this.data = new Recorder(30);
+        this.clearLog();
         makeObservable(this, {
             status: observable,
             ready: observable,
             data: observable.ref,
             sims: observable,
+            logging: observable,
             start: action,
             setStatus: action,
             onResults: action,
             addSimulation: action,
             removeSimulation: action,
+            toggleLog: action,
+            clearLog: action,
         });
-
     }
 
     start() {
@@ -107,14 +113,15 @@ export class Poser {
             }
         }
 
+        let dt = t - this.previous_timestep;
+        this.previous_timestep = t;
         for (let sim of this.sims) {
             try {
-                sim.step(this.data, t - this.previous_timestep);
+                sim.step(this.data, dt, this);
             } catch (e) {
                 console.trace('ERROR WHEN STEPPING:', e)
             }
         }
-        this.previous_timestep = t;
     }
 
     setStatus(msg: string, ready: boolean) {
@@ -132,6 +139,33 @@ export class Poser {
 
     removeSimulation(sim: Simulation) {
         this.sims.delete(sim);
+    }
+
+    toggleLog() {
+        this.logging = !this.logging;
+    }
+
+    clearLog() {
+        this.logging = false;
+        this.logs = ['t,sim,state,weight,count\n'];
+    }
+
+    log(sim, state, weight, count) {
+        if (this.logging) {
+            this.logs.push(`${this.previous_timestep.toFixed(4)},${sim},${state},${weight.toFixed(4)},${count}\n`);
+        }
+    }
+
+    downloadLog() {
+        let blob = new Blob(this.logs, { type: 'text/csv;charset=utf-8;' });
+        let link = document.createElement('a');
+        let url = URL.createObjectURL(blob);
+        link.setAttribute('href', url);
+        link.setAttribute('download', 'log.csv');
+        link.style.visibility = 'hidden';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
     }
 }
 

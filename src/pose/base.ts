@@ -218,3 +218,10 @@ export class Recorder implements Iterable<Sample> {
     }
 }
 
+export interface SimLogger {
+    logging: boolean;
+    toggleLog();
+    clearLog();
+    log(sim: string, state: string, weight: number, count: number);
+    downloadLog();
+}

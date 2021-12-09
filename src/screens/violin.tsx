@@ -41,6 +41,7 @@ export class ViolinApp extends Component {
 
     componentDidMount() {
         POSER.start();
+        POSER.clearLog();
         direction.reset();
         POSER.addSimulation(direction);
         level.reset();

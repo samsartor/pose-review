@@ -1,5 +1,5 @@
 import { render } from "react-dom";
-import { Nav } from "react-bootstrap";
+import { Button, Nav, NavbarBrand } from "react-bootstrap";
 import { BrowserRouter, NavLink } from "react-router-dom";
 import { Routes, Route } from "react-router";
 import { Todos, TodoApp } from "./screens/todos";
@@ -24,12 +24,24 @@ if (location.origin.endsWith('samsartor.com')) {
 class App extends Component {
     render() {
         return <BrowserRouter basename={basename}>
-            <Nav as="ul" className="fixed-bottom bg-light">
+            <Nav as="ul" className="fixed-bottom bg-light d-flex align-items-center">
                 <Nav.Item as="li">
                     <Nav.Link as={NavLink} to="/violin">Violin</Nav.Link>
                 </Nav.Item>
                 <Nav.Item as="li">
                     <Nav.Link as={NavLink} to="/squat/start_page">Squat</Nav.Link>
+                </Nav.Item>
+                <Nav.Item>
+                    <Button
+                        size="sm"
+                        variant={POSER.logging ? 'warning' : 'outline-warning'}
+                        onClick={() => POSER.toggleLog()}
+                        style={{ width: "25px", padding: 0, marginRight: "5px" }}>🖂</Button>
+                    <Button
+                        size="sm"
+                        variant="outline-success"
+                        onClick={() => POSER.downloadLog()}
+                        style={{ width: "25px", padding: 0 }}>⤓</Button>
                 </Nav.Item>
                 <Nav.Item>
                     <Nav.Link disabled>MediaPipe: {POSER.status}</Nav.Link>
@@ -45,7 +57,7 @@ class App extends Component {
                 <Route path="/squat/advanced_config" element={<AdvancedConfigPage />} />
                 <Route path="/squat/main_page" element={<MainPage />} />
             </Routes>
-        </BrowserRouter>;
+        </BrowserRouter >;
     }
 }
 

@@ -82,6 +82,7 @@ export class MainPage extends Component {
 
     componentDidMount() {
         POSER.start();
+        POSER.clearLog();
         for (let sim of sims) {
             sim.reset();
             POSER.addSimulation(sim);
