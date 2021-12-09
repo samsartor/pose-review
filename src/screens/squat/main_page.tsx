@@ -50,9 +50,9 @@ repUp.to(1 / 5, (data) => {
 
 let fuzzyEcStates = new FuzzySimulation('Squats (fuzzy ec)', repTop);
 let fuzzyRawStates = new FuzzySimulation('Squats (fuzzy raw)', repTop, false);
-let ecStates = new Simulation('Squats (ec)', repTop);
+let ecStates = new Simulation('Squats', repTop);
 let rawStates = new Simulation('Squats (raw)', repTop, false);
-let sims = [fuzzyEcStates, fuzzyRawStates, ecStates, rawStates];
+let sims = [ecStates];
 
 /**
  * This class functions as the primary use page for the portion of the
