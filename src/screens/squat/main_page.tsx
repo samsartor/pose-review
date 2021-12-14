@@ -52,7 +52,7 @@ let fuzzyEcStates = new FuzzySimulation('Squats (fuzzy ec)', repTop);
 let fuzzyRawStates = new FuzzySimulation('Squats (fuzzy raw)', repTop, false);
 let ecStates = new Simulation('Squats', repTop);
 let rawStates = new Simulation('Squats (raw)', repTop, false);
-let sims = [ecStates];
+let sims = [fuzzyEcStates, fuzzyRawStates, ecStates, rawStates];
 
 /**
  * This class functions as the primary use page for the portion of the
@@ -71,12 +71,13 @@ let sims = [ecStates];
 @observer
 export class MainPage extends Component {
     hipAngle: 'wide' | 'moderate' | 'narrow';
-    selectedSim: Simulation | null = fuzzyRawStates;
+    selectedSim: Simulation | null = ecStates;
 
     constructor(props) {
         super(props);
         makeObservable(this, {
             selectedSim: observable,
+            selectedSims: computed,
         });
     }
 
@@ -95,11 +96,19 @@ export class MainPage extends Component {
         }
     }
 
+    get selectedSims(): Simulation[] {
+        if (this.selectedSim != null) {
+            return [this.selectedSim];
+        } else {
+            return sims;
+        }
+    }
+
     render() {
         return <Container className="my-4">
             <PoserCanvas delay={0.1} />
             {
-                sims.map((sim) => {
+                this.selectedSims.map((sim) => {
                     return <>
                         <h2>{sim.name} -- {sim.count(repUp)} reps</h2>
                         <StateView sim={sim} />
